@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@500;700&display=swap');
+
+:root {
+  --bg-primary: #000000;
+  --bg-card: #0d0d0d;
+  --bg-elevated: #1a1a1a;
+  --green-primary: #c4f82e;
+  --green-glow: rgba(196, 248, 46, 0.4);
+  --green-dark: #a8e024;
+  --red-primary: #ff4757;
+  --red-glow: rgba(255, 71, 87, 0.3);
+  --text-primary: #ffffff;
+  --text-secondary: #b4b4b4;
+  --text-muted: #737373;
+  --border-subtle: rgba(255, 255, 255, 0.03);
+  --border-default: rgba(255, 255, 255, 0.06);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000000;
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Bento Item Styles - Premium Neon Glow */
+.bento-item {
+  background: linear-gradient(145deg, rgba(18, 18, 18, 0.98) 0%, rgba(10, 10, 10, 0.99) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
+  border-radius: 28px;
+  padding: 2rem;
+  backdrop-filter: blur(30px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.7),
+    0 4px 16px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.bento-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(196, 248, 46, 0.2) 30%,
+    rgba(196, 248, 46, 0.3) 50%,
+    rgba(196, 248, 46, 0.2) 70%,
+    transparent 100%);
+  opacity: 0.5;
+}
+
+.bento-item::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 24px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(196, 248, 46, 0.15) 0%, transparent 50%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.bento-item:hover {
+  border-color: rgba(196, 248, 46, 0.35);
+  background: linear-gradient(145deg, rgba(22, 22, 22, 1) 0%, rgba(12, 12, 12, 1) 100%);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.9),
+    0 8px 24px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(196, 248, 46, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.bento-item:hover::after {
+  opacity: 1;
+}
+
+/* Item Header - Refined */
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.item-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  color: var(--green-primary);
+  font-family: 'Inter', sans-serif;
+  background: rgba(196, 248, 46, 0.1);
+  padding: 0.35rem 0.7rem;
+  border-radius: 20px;
+  border: 1px solid rgba(196, 248, 46, 0.2);
+  box-shadow: 0 0 12px rgba(196, 248, 46, 0.15);
+}
+
+.live-dot {
+  width: 5px;
+  height: 5px;
+  background: var(--green-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--green-glow), 0 0 24px var(--green-glow);
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 12px var(--green-glow), 0 0 24px var(--green-glow);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 8px var(--green-glow), 0 0 16px var(--green-glow);
+    transform: scale(0.95);
+  }
+}
