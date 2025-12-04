@@ -11,7 +11,8 @@
       "Bash(git remote add:*)",
       "Bash(git push:*)",
       "Bash(npm audit:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nSecurity audit: Comprehensive production-ready security implementation\n\nAdded critical security improvements for production deployment:\n\nSecurity Features:\n- Rate limiting with Upstash Redis (10 req/10s per IP)\n- Input validation using Zod for all external data sources\n- Environment-aware logging to prevent sensitive data leaks\n- Hardened CSP headers (removed unsafe-eval and unsafe-inline)\n- HSTS header for HTTPS enforcement\n- Secure iframe sandboxing (removed allow-same-origin)\n\nAPI Routes:\n- Added rate limiting to all API endpoints\n- Implemented data validation with fallback mechanisms\n- Added rate limit headers in responses\n- Proper error handling without leaking details\n\nComponents:\n- Updated all components with Zod validation\n- Replaced console.* with environment-aware logger\n- Validated WebSocket and REST API responses\n\nInfrastructure:\n- Created validation schemas for all external APIs\n- Added rate limiting infrastructure with Redis\n- Environment variable configuration examples\n- Comprehensive security documentation (SECURITY.md)\n\nDependencies:\n- Added zod for runtime type validation\n- Added @upstash/ratelimit and @upstash/redis\n- Zero vulnerabilities in dependency audit\n\nDocumentation:\n- SECURITY.md with full implementation details\n- .env.example for environment configuration\n- Production deployment checklist\n- Security monitoring guidelines\n\nAll builds passing. Ready for production deployment.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

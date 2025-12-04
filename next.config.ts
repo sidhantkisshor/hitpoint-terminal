@@ -34,8 +34,8 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self'",
-              "style-src 'self' https://fonts.googleapis.com",
+              "script-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https://api.coingecko.com https://s.tradingview.com https://www.coinglass.com",
               "connect-src 'self' wss://stream.binance.com:9443 wss://stream.binance.com https://api.binance.com https://api.coingecko.com https://api.alternative.me https://fapi.binance.com https://api.bybit.com",
