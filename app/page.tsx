@@ -22,17 +22,13 @@ export default function Home() {
       <header className="sticky top-0 z-50 backdrop-blur-2xl bg-black/85 border-b border-white/10 shadow-2xl">
         <div className="max-w-[1900px] mx-auto px-8 py-5 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#c4f82e] to-[#a8e024] rounded-xl shadow-2xl shadow-[#c4f82e]/40 flex items-center justify-center">
-              <div className="w-3 h-3 bg-black rounded-full"></div>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Hitpoint Terminal Logo"
+              className="w-10 h-10 object-contain"
+            />
             <span className="text-2xl font-bold tracking-tight text-white">Hitpoint Terminal</span>
           </div>
-
-          <nav className="hidden md:flex gap-8 text-sm text-gray-400 font-medium" aria-label="Main navigation">
-            <a href="#markets" className="hover:text-[#c4f82e] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#c4f82e] rounded-md px-3 py-1.5" aria-label="Navigate to Markets section">Markets</a>
-            <a href="#analytics" className="hover:text-[#c4f82e] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#c4f82e] rounded-md px-3 py-1.5" aria-label="Navigate to Analytics section">Analytics</a>
-            <a href="#data" className="hover:text-[#c4f82e] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#c4f82e] rounded-md px-3 py-1.5" aria-label="Navigate to Data section">Data</a>
-          </nav>
 
           <div className="flex items-center gap-2 bg-[#c4f82e]/15 px-4 py-2 rounded-full border border-[#c4f82e]/30 shadow-lg shadow-[#c4f82e]/20" role="status" aria-live="polite">
             <div className="w-2 h-2 bg-[#c4f82e] rounded-full shadow-lg shadow-[#c4f82e]/70 animate-pulse" aria-hidden="true"></div>
