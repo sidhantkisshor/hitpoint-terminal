@@ -53,7 +53,7 @@ export function LiquidationBubbles() {
             className="w-full h-full border-0 bg-transparent"
             style={{ minHeight: '400px' }}
             title="TradingView BTC/USDT Chart"
-            sandbox="allow-scripts allow-popups"
+            sandbox="allow-scripts allow-same-origin allow-popups"
             loading="lazy"
           />
         )}
@@ -65,7 +65,7 @@ export function LiquidationBubbles() {
               className="w-full flex-1 border-0 rounded-lg bg-transparent"
               style={{ minHeight: '400px' }}
               title="CoinGlass Liquidation Heatmap"
-              sandbox="allow-scripts allow-popups"
+              sandbox="allow-scripts allow-same-origin allow-popups"
               loading="lazy"
             />
             <div className="mt-2 p-2 bg-white/5 rounded-lg text-center">

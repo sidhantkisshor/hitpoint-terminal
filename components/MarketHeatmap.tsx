@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useMarketStore } from '@/store/useMarketStore';
 import { BybitRatioSchema, safeValidate } from '@/lib/validation';
 import { logger } from '@/lib/logger';
@@ -10,23 +10,28 @@ export function MarketHeatmap() {
   const setMarketData = useMarketStore((state) => state.setMarketData);
   const longShortRatio = useMarketStore((state) => state.longShortRatio);
   const setLongShortRatio = useMarketStore((state) => state.setLongShortRatio);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
+        setError(null);
         const response = await fetch('/api/coingecko/markets');
 
         if (!response.ok) {
-          throw new Error('Failed to fetch market data');
+          throw new Error(`Failed to fetch market data: ${response.status}`);
         }
 
         const data = await response.json();
 
         if (Array.isArray(data) && data.length > 0) {
           setMarketData(data);
+        } else {
+          throw new Error('Invalid market data format');
         }
       } catch (error) {
         logger.error('Error fetching market data:', error);
+        setError('Unable to load market data');
       }
     };
 
@@ -40,11 +45,17 @@ export function MarketHeatmap() {
     const fetchRatio = async () => {
       try {
         const response = await fetch(
-          'https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=BTCUSDT&period=5min'
+          'https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=BTCUSDT&period=5min',
+          {
+            headers: {
+              'Accept': 'application/json',
+            },
+          }
         );
 
         if (!response.ok) {
-          throw new Error('Failed to fetch Long/Short Ratio');
+          logger.warn(`Bybit API returned ${response.status}`);
+          return;
         }
 
         const rawData = await response.json();
@@ -100,6 +111,11 @@ export function MarketHeatmap() {
       </div>
 
       <div className="space-y-4">
+        {error && (
+          <div className="text-center text-red-400 text-sm py-4 bg-red-500/10 rounded-lg border border-red-500/20">
+            {error}
+          </div>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {marketData.length > 0 ? (
             marketData.map((coin) => (

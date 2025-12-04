@@ -4,6 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Hitpoint Terminal - Live Crypto Intelligence",
   description: "Professional-grade real-time crypto analytics terminal",
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({
