@@ -6,7 +6,12 @@
       "Bash(npm install)",
       "Bash(timeout 10 bash:*)",
       "Bash(curl:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Hitpoint Terminal - Crypto market analytics dashboard\n\nAdded comprehensive crypto market analysis dashboard with:\n- Real-time BTC price ticker\n- Fear & Greed Index\n- Market heatmap with top cryptocurrencies\n- Funding rates visualization\n- Long/Short ratio analysis\n- Liquidation bubbles chart\n- Economic calendar\n- Market dominance chart\n\nBuilt with Next.js, React, Recharts, and Zustand for state management.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

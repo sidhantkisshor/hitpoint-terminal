@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { useMarketStore } from '@/store/useMarketStore';
+import { BinanceFundingRateSchema, safeValidate } from '@/lib/validation';
+import { logger } from '@/lib/logger';
 
 export function FundingRates() {
   const fundingRates = useMarketStore((state) => state.fundingRates);
@@ -22,9 +24,17 @@ export function FundingRates() {
               throw new Error(`Failed to fetch funding rate for ${symbol}`);
             }
 
-            const data = await response.json();
+            const rawData = await response.json();
 
-            if (data && data.length > 0 && data[0]?.fundingRate) {
+            // Validate Binance funding rate data
+            const validation = safeValidate(BinanceFundingRateSchema, rawData);
+            if (!validation.success) {
+              logger.error(`Invalid funding rate data for ${symbol}:`, validation.error);
+              return null;
+            }
+
+            const data = validation.data;
+            if (data.length > 0) {
               const rate = parseFloat(data[0].fundingRate) * 100;
 
               if (!isNaN(rate)) {
@@ -39,7 +49,7 @@ export function FundingRates() {
             }
             return null;
           } catch (error) {
-            console.error(`Error fetching funding rate for ${symbol}:`, error);
+            logger.error(`Error fetching funding rate for ${symbol}:`, error);
             return null;
           }
         });
@@ -51,7 +61,7 @@ export function FundingRates() {
           setFundingRates(validRates);
         }
       } catch (error) {
-        console.error('Error fetching funding rates:', error);
+        logger.error('Error fetching funding rates:', error);
       }
     };
 

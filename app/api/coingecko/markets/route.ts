@@ -1,4 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/ratelimit';
+import { CoinGeckoMarketsSchema, safeValidate } from '@/lib/validation';
+import { logger } from '@/lib/logger';
 
 // Fallback data in case API fails
 const FALLBACK_DATA = [
@@ -14,8 +17,26 @@ const FALLBACK_DATA = [
   { id: 'avalanche-2', symbol: 'avax', current_price: 51.2, price_change_percentage_24h: -1.2 },
 ];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'anonymous';
+    const rateLimit = await checkRateLimit(`coingecko-markets:${ip}`);
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+            'X-RateLimit-Reset': rateLimit.reset.toString(),
+          }
+        }
+      );
+    }
+
     const response = await fetch(
       'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false',
       {
@@ -27,20 +48,34 @@ export async function GET() {
     );
 
     if (!response.ok) {
-      console.warn(`CoinGecko API returned ${response.status}, using fallback data`);
+      logger.warn(`CoinGecko API returned ${response.status}, using fallback data`);
       return NextResponse.json(FALLBACK_DATA);
     }
 
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      console.warn('CoinGecko API returned non-JSON response, using fallback data');
+      logger.warn('CoinGecko API returned non-JSON response, using fallback data');
       return NextResponse.json(FALLBACK_DATA);
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+
+    // Validate response data
+    const validation = safeValidate(CoinGeckoMarketsSchema, data);
+    if (!validation.success) {
+      logger.error('CoinGecko market data validation failed:', validation.error);
+      return NextResponse.json(FALLBACK_DATA);
+    }
+
+    return NextResponse.json(validation.data, {
+      headers: {
+        'X-RateLimit-Limit': rateLimit.limit.toString(),
+        'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+        'X-RateLimit-Reset': rateLimit.reset.toString(),
+      }
+    });
   } catch (error) {
-    console.error('Error fetching market data:', error);
+    logger.error('Error fetching market data:', error);
     return NextResponse.json(FALLBACK_DATA);
   }
 }

@@ -27,13 +27,17 @@ const nextConfig: NextConfig = {
             value: 'camera=(), microphone=(), geolocation=()',
           },
           {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
+          {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "script-src 'self'",
+              "style-src 'self' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: https:",
+              "img-src 'self' data: https://api.coingecko.com https://s.tradingview.com https://www.coinglass.com",
               "connect-src 'self' wss://stream.binance.com:9443 wss://stream.binance.com https://api.binance.com https://api.coingecko.com https://api.alternative.me https://fapi.binance.com https://api.bybit.com",
               "frame-src https://s.tradingview.com https://www.coinglass.com",
             ].join('; '),

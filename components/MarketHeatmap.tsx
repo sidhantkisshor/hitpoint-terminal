@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { useMarketStore } from '@/store/useMarketStore';
+import { BybitRatioSchema, safeValidate } from '@/lib/validation';
+import { logger } from '@/lib/logger';
 
 export function MarketHeatmap() {
   const marketData = useMarketStore((state) => state.marketData);
@@ -24,7 +26,7 @@ export function MarketHeatmap() {
           setMarketData(data);
         }
       } catch (error) {
-        console.error('Error fetching market data:', error);
+        logger.error('Error fetching market data:', error);
       }
     };
 
@@ -45,22 +47,27 @@ export function MarketHeatmap() {
           throw new Error('Failed to fetch Long/Short Ratio');
         }
 
-        const data = await response.json();
+        const rawData = await response.json();
 
-        if (data?.retCode === 0 && data?.result?.list?.length > 0) {
+        // Validate Bybit API response
+        const validation = safeValidate(BybitRatioSchema, rawData);
+        if (!validation.success) {
+          logger.error('Invalid Bybit ratio data:', validation.error);
+          return;
+        }
+
+        const data = validation.data;
+        if (data.retCode === 0 && data.result.list.length > 0) {
           const latest = data.result.list[0];
+          const buyRatio = parseFloat(latest.buyRatio) * 100;
+          const sellRatio = parseFloat(latest.sellRatio) * 100;
 
-          if (latest?.buyRatio && latest?.sellRatio) {
-            const buyRatio = parseFloat(latest.buyRatio) * 100;
-            const sellRatio = parseFloat(latest.sellRatio) * 100;
-
-            if (!isNaN(buyRatio) && !isNaN(sellRatio)) {
-              setLongShortRatio(buyRatio, sellRatio);
-            }
+          if (!isNaN(buyRatio) && !isNaN(sellRatio)) {
+            setLongShortRatio(buyRatio, sellRatio);
           }
         }
       } catch (error) {
-        console.error('Error fetching Long/Short Ratio:', error);
+        logger.error('Error fetching Long/Short Ratio:', error);
       }
     };
 

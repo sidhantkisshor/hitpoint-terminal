@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { useMarketStore } from '@/store/useMarketStore';
+import { FearGreedSchema, safeValidate } from '@/lib/validation';
+import { logger } from '@/lib/logger';
 
 export function FearGreedIndex() {
   const fearGreedIndex = useMarketStore((state) => state.fearGreedIndex);
@@ -17,18 +19,24 @@ export function FearGreedIndex() {
           throw new Error('Failed to fetch Fear & Greed Index');
         }
 
-        const data = await response.json();
+        const rawData = await response.json();
 
-        if (data?.data?.[0]?.value && data?.data?.[0]?.value_classification) {
-          const index = parseInt(data.data[0].value);
-          const classification = data.data[0].value_classification;
+        // Validate API response
+        const validation = safeValidate(FearGreedSchema, rawData);
+        if (!validation.success) {
+          logger.error('Invalid Fear & Greed data:', validation.error);
+          return;
+        }
 
-          if (!isNaN(index) && index >= 0 && index <= 100) {
-            setFearGreed(index, classification);
-          }
+        const data = validation.data;
+        const index = parseInt(data.data[0].value);
+        const classification = data.data[0].value_classification;
+
+        if (!isNaN(index) && index >= 0 && index <= 100) {
+          setFearGreed(index, classification);
         }
       } catch (error) {
-        console.error('Error fetching Fear & Greed Index:', error);
+        logger.error('Error fetching Fear & Greed Index:', error);
       }
     };
 
