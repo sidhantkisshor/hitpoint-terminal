@@ -17,13 +17,9 @@ export function MarketHeatmap() {
       try {
         setError(null);
         const response = await fetch('/api/coingecko/markets');
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch market data: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Failed to fetch market data: ${response.status}`);
 
         const data = await response.json();
-
         if (Array.isArray(data) && data.length > 0) {
           setMarketData(data);
         } else {
@@ -37,7 +33,6 @@ export function MarketHeatmap() {
 
     fetchMarketData();
     const interval = setInterval(fetchMarketData, 60 * 1000);
-
     return () => clearInterval(interval);
   }, [setMarketData]);
 
@@ -46,21 +41,14 @@ export function MarketHeatmap() {
       try {
         const response = await fetch(
           'https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=BTCUSDT&period=5min',
-          {
-            headers: {
-              'Accept': 'application/json',
-            },
-          }
+          { headers: { 'Accept': 'application/json' } }
         );
-
         if (!response.ok) {
           logger.warn(`Bybit API returned ${response.status}`);
           return;
         }
 
         const rawData = await response.json();
-
-        // Validate Bybit API response
         const validation = safeValidate(BybitRatioSchema, rawData);
         if (!validation.success) {
           logger.error('Invalid Bybit ratio data:', validation.error);
@@ -72,7 +60,6 @@ export function MarketHeatmap() {
           const latest = data.result.list[0];
           const buyRatio = parseFloat(latest.buyRatio) * 100;
           const sellRatio = parseFloat(latest.sellRatio) * 100;
-
           if (!isNaN(buyRatio) && !isNaN(sellRatio)) {
             setLongShortRatio(buyRatio, sellRatio);
           }
@@ -84,7 +71,6 @@ export function MarketHeatmap() {
 
     fetchRatio();
     const interval = setInterval(fetchRatio, 5 * 60 * 1000);
-
     return () => clearInterval(interval);
   }, [setLongShortRatio]);
 
@@ -92,12 +78,12 @@ export function MarketHeatmap() {
   const shortPercent = longShortRatio?.short || 50;
 
   const getColorClass = (change: number) => {
-    if (change > 5) return 'bg-[#c4f82e]/12 border-[#c4f82e]/25 text-[#c4f82e] shadow-lg shadow-[#c4f82e]/15';
-    if (change > 2) return 'bg-[#c4f82e]/8 border-[#c4f82e]/20 text-[#c4f82e]';
-    if (change > 0) return 'bg-[#c4f82e]/5 border-[#c4f82e]/12 text-[#a8e024]';
-    if (change > -2) return 'bg-[#ff4757]/5 border-[#ff4757]/12 text-[#ff4757]/90';
-    if (change > -5) return 'bg-[#ff4757]/8 border-[#ff4757]/20 text-[#ff4757]';
-    return 'bg-[#ff4757]/12 border-[#ff4757]/25 text-[#ff4757] shadow-lg shadow-[#ff4757]/15';
+    if (change > 5) return 'bg-[#c4f82e]/8 border-[#c4f82e]/20 text-[#c4f82e]';
+    if (change > 2) return 'bg-[#c4f82e]/5 border-[#c4f82e]/15 text-[#c4f82e]';
+    if (change > 0) return 'bg-[#c4f82e]/[0.03] border-[#c4f82e]/10 text-[#a8e024]';
+    if (change > -2) return 'bg-[#ff4757]/[0.03] border-[#ff4757]/10 text-[#ff4757]/90';
+    if (change > -5) return 'bg-[#ff4757]/5 border-[#ff4757]/15 text-[#ff4757]';
+    return 'bg-[#ff4757]/8 border-[#ff4757]/20 text-[#ff4757]';
   };
 
   return (
@@ -112,70 +98,67 @@ export function MarketHeatmap() {
 
       <div className="space-y-4">
         {error && (
-          <div className="text-center text-red-400 text-sm py-4 bg-red-500/10 rounded-lg border border-red-500/20">
+          <div className="text-center text-red-400 text-sm py-4 bg-red-500/8 rounded-xl border border-red-500/15">
             {error}
           </div>
         )}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
           {marketData.length > 0 ? (
             marketData.map((coin) => (
               <div
                 key={coin.id}
-                className={`border rounded-xl p-4 hover:bg-white/5 transition-all duration-300 ${getColorClass(
-                  coin.price_change_percentage_24h
-                )}`}
+                className={`border rounded-xl p-3 sm:p-4 hover:bg-white/[0.03] transition-all duration-300 ${getColorClass(coin.price_change_percentage_24h)}`}
               >
-                <div className="text-xs font-semibold uppercase mb-2 tracking-wide opacity-70">
+                <div className="text-[10px] sm:text-xs font-display font-semibold uppercase mb-1.5 tracking-wide opacity-70">
                   {coin.symbol}
                 </div>
-                <div className="text-2xl font-bold font-mono mb-2">
+                <div className="text-xl sm:text-2xl font-bold font-mono mb-1.5">
                   {coin.price_change_percentage_24h >= 0 ? '+' : ''}
                   {coin.price_change_percentage_24h.toFixed(1)}%
                 </div>
-                <div className="text-xs text-gray-500 font-mono">
+                <div className="text-[10px] sm:text-xs text-[#5a5a5a] font-mono">
                   ${coin.current_price > 1 ? coin.current_price.toLocaleString(undefined, {maximumFractionDigits: 0}) : coin.current_price.toFixed(4)}
                 </div>
               </div>
             ))
           ) : (
-            <div className="col-span-5 text-center text-gray-600 py-12">Loading...</div>
+            <div className="col-span-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className="skeleton h-24 sm:h-28 rounded-xl" />
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Long/Short Ratio Section */}
-        <div className="border-t border-white/5 pt-4">
+        {/* Long/Short Ratio */}
+        <div className="border-t border-white/[0.04] pt-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Long/Short Ratio</span>
-            <div className="flex gap-4 text-sm font-mono font-bold">
+            <span className="text-[10px] sm:text-xs font-display font-semibold uppercase tracking-wide text-[#5a5a5a]">Long/Short Ratio</span>
+            <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm font-mono font-bold">
               <span className="text-[#c4f82e]">{longPercent.toFixed(1)}% L</span>
               <span className="text-[#ff4757]">{shortPercent.toFixed(1)}% S</span>
             </div>
           </div>
 
-          <div className="relative h-3 bg-black/60 rounded-full overflow-hidden">
+          <div className="relative h-2.5 bg-white/[0.03] rounded-full overflow-hidden">
             <div className="absolute inset-0 flex">
               <div
                 className="bg-gradient-to-r from-[#c4f82e] to-[#a8e024] transition-all duration-700 ease-out relative"
-                style={{
-                  width: `${longPercent}%`,
-                  boxShadow: '0 0 15px rgba(196, 248, 46, 0.5), inset 0 0 8px rgba(196, 248, 46, 0.3)'
-                }}
+                style={{ width: `${longPercent}%`, boxShadow: '0 0 12px rgba(196, 248, 46, 0.4)' }}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/15"></div>
               </div>
               <div
                 className="bg-gradient-to-r from-[#ff6b7a] to-[#ff4757] transition-all duration-700 ease-out relative"
-                style={{
-                  width: `${shortPercent}%`,
-                  boxShadow: '0 0 15px rgba(255, 71, 87, 0.4), inset 0 0 8px rgba(255, 71, 87, 0.3)'
-                }}
+                style={{ width: `${shortPercent}%`, boxShadow: '0 0 12px rgba(255, 71, 87, 0.3)' }}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/15"></div>
               </div>
             </div>
           </div>
 
-          <div className="text-xs text-gray-400 font-medium mt-2">
+          <div className="text-[10px] sm:text-xs text-[#5a5a5a] font-medium mt-2">
             {longPercent > 60 ? 'Strong bullish sentiment' : shortPercent > 60 ? 'Strong bearish sentiment' : 'Balanced market sentiment'}
           </div>
         </div>

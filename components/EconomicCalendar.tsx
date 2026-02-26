@@ -21,7 +21,7 @@ export function EconomicCalendar() {
   }, []);
 
   return (
-    <div className="bento-item col-span-12 lg:col-span-4 row-span-1">
+    <div className="bento-item col-span-12 md:col-span-6 lg:col-span-4 row-span-1">
       <div className="item-header">
         <span className="item-title">ECONOMIC CALENDAR</span>
         <div className="live-indicator">
@@ -29,7 +29,7 @@ export function EconomicCalendar() {
           <span>LIVE</span>
         </div>
       </div>
-      <div ref={containerRef} style={{ height: 'calc(100% - 3rem)' }} />
+      <div ref={containerRef} className="min-h-[250px]" style={{ height: 'calc(100% - 3rem)' }} />
     </div>
   );
 }

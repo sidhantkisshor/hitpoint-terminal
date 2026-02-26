@@ -8,25 +8,10 @@ interface BTCTicker {
   prevPrice: string;
 }
 
-interface Liquidation {
-  id: string;
-  symbol: string;
-  side: string;
-  price: string;
-  qty: string;
-  time: number;
-  value: number;
-}
-
 interface MarketStore {
   // BTC Price
   btcTicker: BTCTicker | null;
   setBtcTicker: (ticker: BTCTicker | ((prev: BTCTicker | null) => BTCTicker)) => void;
-
-  // Liquidations
-  liquidations: Liquidation[];
-  addLiquidation: (liquidation: Liquidation) => void;
-  removeLiquidation: (id: string) => void;
 
   // Fear & Greed
   fearGreedIndex: number | null;
@@ -75,17 +60,6 @@ export const useMarketStore = create<MarketStore>()(
     setBtcTicker: (ticker) => set((state) => ({
       btcTicker: typeof ticker === 'function' ? ticker(state.btcTicker) : ticker
     })),
-
-    // Liquidations
-    liquidations: [],
-    addLiquidation: (liquidation) =>
-      set((state) => ({
-        liquidations: [...state.liquidations, liquidation].slice(-50), // Keep last 50
-      })),
-    removeLiquidation: (id) =>
-      set((state) => ({
-        liquidations: state.liquidations.filter((l) => l.id !== id),
-      })),
 
     // Fear & Greed
     fearGreedIndex: null,

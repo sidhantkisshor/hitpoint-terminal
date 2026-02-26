@@ -1,5 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { logger } from "./logger";
 
 // Create a rate limiter that allows 10 requests per 10 seconds
 // For production, use Upstash Redis. For development, use in-memory store.
@@ -21,7 +22,7 @@ try {
     });
   }
 } catch (error) {
-  console.warn('Rate limiting is disabled. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for production.');
+  logger.warn('Rate limiting is disabled. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for production.');
 }
 
 export async function checkRateLimit(identifier: string): Promise<{

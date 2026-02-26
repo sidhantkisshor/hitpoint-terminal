@@ -29,7 +29,7 @@ yarn-error.log*
 .env*.local
 
 # vercel
-.vercel
+.vercel/
 
 # typescript
 *.tsbuildinfo
@@ -37,3 +37,22 @@ next-env.d.ts
 
 # subscriber data
 data/subscribers.json
+
+# playwright
+.playwright-mcp/
+
+# screenshots / temp images
+*.png
+*.jpeg
+*.jpg
+!public/**/*.png
+!public/**/*.jpeg
+!public/**/*.jpg
+
+# planning docs
+docs/
+
+# misc
+nul
+
+.vercel

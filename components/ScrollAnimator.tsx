@@ -16,7 +16,10 @@ export function ScrollAnimator() {
     );
 
     const elements = document.querySelectorAll('.scroll-fade-in');
-    elements.forEach((el) => observer.observe(el));
+    elements.forEach((el) => {
+      el.classList.add('animate-on-scroll');
+      observer.observe(el);
+    });
 
     return () => observer.disconnect();
   }, []);

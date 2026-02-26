@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://platform.twitter.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://platform.twitter.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https://api.coingecko.com https://s.tradingview.com https://www.coinglass.com https://pbs.twimg.com https://abs.twimg.com",

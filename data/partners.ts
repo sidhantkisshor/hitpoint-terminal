@@ -1,11 +1,21 @@
 export interface Partner {
   name: string;
   logo: string;
-  url?: string;
+  description: string;
+  url: string;
 }
 
 export const partners: Partner[] = [
-  // Replace with actual partner logos in public/partners/
-  // { name: 'Binance', logo: '/partners/binance.png', url: 'https://binance.com' },
-  // { name: 'Bybit', logo: '/partners/bybit.png', url: 'https://bybit.com' },
+  {
+    name: 'Delta Exchange',
+    logo: '/partners/delta-exchange.png',
+    description: 'Pro-grade derivatives · FIU Registered · INR',
+    url: 'https://tws.bio/dx',
+  },
+  {
+    name: 'BitBaby',
+    logo: '/partners/bitbaby.png',
+    description: 'Beginner-friendly · On-chain deposits',
+    url: 'https://tws.bio/bitbaby',
+  },
 ];

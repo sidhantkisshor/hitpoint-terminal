@@ -15,35 +15,50 @@ import { NewsletterPopup } from '@/components/NewsletterPopup';
 import { SignalsGallery } from '@/components/SignalsGallery';
 import { NewsletterSignup } from '@/components/NewsletterSignup';
 import { TraderQuiz } from '@/components/TraderQuiz';
+import { HeaderQuizCTA } from '@/components/HeaderQuizCTA';
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-black">
-      {/* Pitch Black Background with Subtle Glow */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
+      {/* Ambient Background */}
+      <div className="fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 bg-black"></div>
-        <div className="absolute top-1/5 left-1/5 w-[700px] h-[700px] bg-[#c4f82e]/4 rounded-full blur-[180px] animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/5 w-[600px] h-[600px] bg-[#c4f82e]/3 rounded-full blur-[160px] animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[#c4f82e]/2 rounded-full blur-[200px] opacity-20"></div>
+        <div
+          className="absolute top-[15%] left-[10%] w-[600px] h-[600px] rounded-full blur-[200px]"
+          style={{ background: 'radial-gradient(circle, rgba(196,248,46,0.04) 0%, transparent 70%)', animation: 'ambient-drift 20s ease-in-out infinite' }}
+        />
+        <div
+          className="absolute bottom-[20%] right-[10%] w-[500px] h-[500px] rounded-full blur-[180px]"
+          style={{ background: 'radial-gradient(circle, rgba(196,248,46,0.03) 0%, transparent 70%)', animation: 'ambient-drift 25s ease-in-out infinite reverse' }}
+        />
+        <div
+          className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[220px] opacity-30"
+          style={{ background: 'radial-gradient(circle, rgba(196,248,46,0.02) 0%, transparent 60%)' }}
+        />
       </div>
 
       <ScrollAnimator />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-2xl bg-black/85 border-b border-white/10 shadow-2xl">
-        <div className="max-w-[1900px] mx-auto px-8 py-5 flex justify-between items-center">
+      <header className="sticky top-0 z-50 backdrop-blur-2xl bg-black/80 border-b border-white/[0.06]">
+        <div className="max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <img
               src="/logo.png"
               alt="Hitpoint Terminal Logo"
-              className="w-10 h-10 object-contain"
+              className="w-9 h-9 sm:w-10 sm:h-10 object-contain"
             />
-            <span className="text-2xl font-bold tracking-tight text-white">Hitpoint Terminal</span>
+            <span className="text-lg sm:text-xl font-display font-bold tracking-tight text-white">
+              Hitpoint Terminal
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 bg-[#c4f82e]/15 px-4 py-2 rounded-full border border-[#c4f82e]/30 shadow-lg shadow-[#c4f82e]/20" role="status" aria-live="polite">
-            <div className="w-2 h-2 bg-[#c4f82e] rounded-full shadow-lg shadow-[#c4f82e]/70 animate-pulse" aria-hidden="true"></div>
-            <span className="text-xs text-[#c4f82e] font-bold tracking-wider">LIVE</span>
+          <div className="flex items-center gap-3">
+            <HeaderQuizCTA />
+            <div className="flex items-center gap-2 bg-[#c4f82e]/8 px-3 py-1.5 rounded-full border border-[#c4f82e]/15" role="status" aria-live="polite">
+              <div className="live-dot" aria-hidden="true"></div>
+              <span className="text-[10px] text-[#c4f82e] font-mono font-medium tracking-widest">LIVE</span>
+            </div>
           </div>
         </div>
       </header>
@@ -52,9 +67,9 @@ export default function Home() {
       <SectionNav />
 
       {/* Dashboard Section */}
-      <section id="dashboard" className="relative z-10 px-8 py-8" aria-label="Cryptocurrency market dashboard">
+      <section id="dashboard" className="relative z-10 px-4 sm:px-6 lg:px-8 py-6 lg:py-8" aria-label="Cryptocurrency market dashboard">
         <div className="max-w-[1900px] mx-auto">
-          <div className="grid grid-cols-12 gap-5 auto-rows-[minmax(300px,auto)]" role="region" aria-label="Market data widgets">
+          <div className="grid grid-cols-12 gap-3 sm:gap-4 lg:gap-5 auto-rows-[minmax(260px,auto)] sm:auto-rows-[minmax(280px,auto)] lg:auto-rows-[minmax(300px,auto)]" role="region" aria-label="Market data widgets">
             <BTCPriceTicker />
             <FearGreedIndex />
             <MarketDominance />
@@ -67,7 +82,7 @@ export default function Home() {
       </section>
 
       {/* Charts Section */}
-      <section id="charts" className="relative z-10 px-8 py-8">
+      <section id="charts" className="relative z-10 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <div className="max-w-[1900px] mx-auto">
           <div className="section-header">
             <span className="section-title">Interactive Charts</span>
@@ -78,14 +93,14 @@ export default function Home() {
       </section>
 
       {/* Community Section */}
-      <section id="community" className="relative z-10 px-8 py-8">
+      <section id="community" className="relative z-10 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <div className="max-w-[1900px] mx-auto">
           <div className="section-header">
             <span className="section-title">Community</span>
             <div className="section-divider"></div>
           </div>
-          <div className="grid grid-cols-12 gap-5">
-            <CommunityShowcase />
+          <CommunityShowcase />
+          <div className="grid grid-cols-12 gap-3 sm:gap-4 lg:gap-5 mt-3 sm:mt-4 lg:mt-5">
             <TwitterFeed />
             <PartnerLogos />
           </div>
@@ -93,13 +108,13 @@ export default function Home() {
       </section>
 
       {/* Signals Section */}
-      <section id="signals" className="relative z-10 px-8 py-8">
+      <section id="signals" className="relative z-10 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <div className="max-w-[1900px] mx-auto">
           <div className="section-header">
             <span className="section-title">Signals</span>
             <div className="section-divider"></div>
           </div>
-          <div className="grid grid-cols-12 gap-5">
+          <div className="grid grid-cols-12 gap-3 sm:gap-4 lg:gap-5">
             <SignalsGallery />
             <NewsletterSignup />
             <TraderQuiz />

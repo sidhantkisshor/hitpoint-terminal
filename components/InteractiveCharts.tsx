@@ -6,7 +6,7 @@ const CHARTS = [
   { symbol: 'BINANCE:BTCUSDT', label: 'Bitcoin' },
   { symbol: 'BINANCE:ETHUSDT', label: 'Ethereum' },
   { symbol: 'TVC:GOLD', label: 'Gold' },
-  { symbol: 'SP:SPX', label: 'S&P 500' },
+  { symbol: 'AMEX:SPY', label: 'S&P 500 (SPY)' },
 ];
 
 function TradingViewChart({ symbol, label }: { symbol: string; label: string }) {
@@ -27,7 +27,7 @@ function TradingViewChart({ symbol, label }: { symbol: string; label: string }) 
           iframe.style.border = 'none';
           iframe.title = `${label} Chart`;
           iframe.loading = 'lazy';
-          iframe.sandbox.add('allow-scripts', 'allow-same-origin', 'allow-popups');
+          iframe.allow = 'encrypted-media';
           containerRef.current?.appendChild(iframe);
           observerRef.current?.disconnect();
         }
@@ -36,23 +36,22 @@ function TradingViewChart({ symbol, label }: { symbol: string; label: string }) 
     );
 
     observerRef.current.observe(containerRef.current);
-
     return () => observerRef.current?.disconnect();
   }, [symbol, label]);
 
   return (
     <div className="bento-item scroll-fade-in p-0 overflow-hidden">
-      <div className="px-5 pt-4 pb-2">
+      <div className="px-4 sm:px-5 pt-3 sm:pt-4 pb-2">
         <span className="item-title">{label}</span>
       </div>
-      <div ref={containerRef} className="w-full" style={{ height: '380px' }} />
+      <div ref={containerRef} className="w-full h-[280px] sm:h-[340px] lg:h-[380px]" />
     </div>
   );
 }
 
 export function InteractiveCharts() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
       {CHARTS.map((chart) => (
         <TradingViewChart key={chart.symbol} symbol={chart.symbol} label={chart.label} />
       ))}

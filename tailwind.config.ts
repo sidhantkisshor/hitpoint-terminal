@@ -8,13 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        'neon-green': '#39FF14',
-        'accent-cyan': '#00F0FF',
-        'accent-purple': '#B026FF',
-      },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
     },

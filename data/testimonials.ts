@@ -1,33 +1,43 @@
 export interface Testimonial {
-  image: string;
+  number: string;
+  title: string;
   caption: string;
-  author: string;
 }
 
 export const testimonials: Testimonial[] = [
   {
-    image: '/testimonials/placeholder-1.png',
-    caption: 'Turned my trading around completely. The signals are incredibly accurate.',
-    author: '@trader_mike',
+    number: '01',
+    title: 'High-conviction market structure analysis',
+    caption: 'So you stop guessing direction and reacting emotionally',
   },
   {
-    image: '/testimonials/placeholder-2.png',
-    caption: 'Best community I\'ve been part of. The insights are next level.',
-    author: '@crypto_sarah',
+    number: '02',
+    title: 'Well-defined setup scenarios with clear logic',
+    caption: 'Entries, invalidation, and context — not blind calls',
   },
   {
-    image: '/testimonials/placeholder-3.png',
-    caption: 'The funding rate dashboard alone saved me from multiple bad entries.',
-    author: '@defi_dave',
+    number: '03',
+    title: 'Trend & momentum breakdowns',
+    caption: 'So you trade with the market, not against it',
   },
   {
-    image: '/testimonials/placeholder-4.png',
-    caption: 'From losing trader to consistent profits. This changed everything.',
-    author: '@whale_watcher',
+    number: '04',
+    title: 'Risk framing & scenario planning',
+    caption: 'One bad trade never destroys your week or mindset',
   },
   {
-    image: '/testimonials/placeholder-5.png',
-    caption: 'The economic calendar alerts helped me avoid so many liquidations.',
-    author: '@moon_maven',
+    number: '05',
+    title: 'Leverage & liquidation scenario planning',
+    caption: 'So you size positions properly and don\'t get caught in cascades',
+  },
+  {
+    number: '06',
+    title: 'Real-time structure discussion with experienced traders',
+    caption: 'Pressure-test your analysis against others who trade size',
+  },
+  {
+    number: '07',
+    title: 'Clean, low-frequency updates',
+    caption: 'No spam. No dopamine traps. Only what matters.',
   },
 ];

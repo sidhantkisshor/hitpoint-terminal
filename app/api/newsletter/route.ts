@@ -2,24 +2,6 @@ import { NextResponse } from 'next/server';
 import { NewsletterSchema } from '@/lib/validation';
 import { checkRateLimit } from '@/lib/ratelimit';
 import { logger } from '@/lib/logger';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const SUBSCRIBERS_FILE = path.join(process.cwd(), 'data', 'subscribers.json');
-
-async function getSubscribers(): Promise<string[]> {
-  try {
-    const data = await fs.readFile(SUBSCRIBERS_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-async function saveSubscribers(subscribers: string[]): Promise<void> {
-  await fs.mkdir(path.dirname(SUBSCRIBERS_FILE), { recursive: true });
-  await fs.writeFile(SUBSCRIBERS_FILE, JSON.stringify(subscribers, null, 2));
-}
 
 export async function POST(request: Request) {
   try {
@@ -54,14 +36,10 @@ export async function POST(request: Request) {
 
     const { email } = result.data;
 
-    // Append to subscribers file
-    const subscribers = await getSubscribers();
-    if (!subscribers.includes(email)) {
-      subscribers.push(email);
-      await saveSubscribers(subscribers);
-    }
+    // Log the subscription (serverless-compatible)
+    // In production, integrate with an email service (Mailchimp, Resend, etc.)
+    logger.info('New newsletter subscriber:', email);
 
-    logger.info('New newsletter subscriber');
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('Newsletter subscription error:', error);
