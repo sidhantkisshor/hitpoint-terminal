@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   quizQuestions,
   normalizeScores,
@@ -52,23 +52,26 @@ function QuizModal({ onClose }: { onClose: () => void }) {
 
   const handleAnswer = useCallback(
     (optionScores: Scores) => {
-      const newScores: Scores = {
-        bias: scores.bias + optionScores.bias,
-        risk: scores.risk + optionScores.risk,
-        discipline: scores.discipline + optionScores.discipline,
-        emotion: scores.emotion + optionScores.emotion,
-      };
-      setScores(newScores);
+      setScores((prev) => {
+        const newScores: Scores = {
+          bias: prev.bias + optionScores.bias,
+          risk: prev.risk + optionScores.risk,
+          discipline: prev.discipline + optionScores.discipline,
+          emotion: prev.emotion + optionScores.emotion,
+        };
 
-      if (currentQuestion < quizQuestions.length - 1) {
-        setCurrentQuestion((q) => q + 1);
-      } else {
-        setProfile(getProfile(newScores));
-        setNormalized(normalizeScores(newScores));
-        setScreen('email');
-      }
+        if (currentQuestion < quizQuestions.length - 1) {
+          setCurrentQuestion((q) => q + 1);
+        } else {
+          setProfile(getProfile(newScores));
+          setNormalized(normalizeScores(newScores));
+          setScreen('email');
+        }
+
+        return newScores;
+      });
     },
-    [scores, currentQuestion]
+    [currentQuestion]
   );
 
   const reset = useCallback(() => {
@@ -79,8 +82,18 @@ function QuizModal({ onClose }: { onClose: () => void }) {
     setNormalized(INITIAL_SCORES);
   }, []);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
   return (
     <div
+      role="dialog"
+      aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(12px)' }}
     >
@@ -112,9 +125,9 @@ function QuizModal({ onClose }: { onClose: () => void }) {
           />
         )}
 
-        {screen === 'email' && (
+        {screen === 'email' && profile && (
           <QuizEmailGate
-            profile={profile!}
+            profile={profile}
             onReveal={() => setScreen('result')}
           />
         )}
@@ -151,7 +164,7 @@ function QuizIntro({ onStart }: { onStart: () => void }) {
         Start Quiz
       </button>
       <div className="mt-6 flex justify-center gap-1.5">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: quizQuestions.length }).map((_, i) => (
           <div
             key={i}
             className="w-2 h-2 rounded-full bg-white/10"
@@ -170,12 +183,6 @@ function QuizQuestionScreen({
   onAnswer: (scores: Scores) => void;
 }) {
   const q = quizQuestions[questionIndex];
-  const categoryLabels: Record<string, string> = {
-    bias: 'Market Bias',
-    risk: 'Risk Tolerance',
-    discipline: 'Discipline',
-    emotion: 'Emotional Behavior',
-  };
 
   return (
     <div>
@@ -184,7 +191,7 @@ function QuizQuestionScreen({
           {questionIndex + 1} / {quizQuestions.length}
         </span>
         <span className="text-xs text-[#c4f82e]/60 uppercase tracking-wider">
-          {categoryLabels[q.category]}
+          {CATEGORY_LABELS[q.category]}
         </span>
       </div>
       <div className="w-full h-1 bg-white/5 rounded-full mb-8">
@@ -271,6 +278,13 @@ function QuizEmailGate({
     </div>
   );
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  bias: 'Market Bias',
+  risk: 'Risk Tolerance',
+  discipline: 'Discipline',
+  emotion: 'Emotional Behavior',
+};
 
 const DIMENSION_LABELS: { key: keyof Scores; label: string }[] = [
   { key: 'bias', label: 'Market Bias' },
