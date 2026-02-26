@@ -1,11 +1,11 @@
 import { BTCPriceTicker } from '@/components/BTCPriceTicker';
 import { FearGreedIndex } from '@/components/FearGreedIndex';
 import { LiquidationBubbles } from '@/components/LiquidationBubbles';
-import { LongShortRatio } from '@/components/LongShortRatio';
 import { FundingRates } from '@/components/FundingRates';
 import { MarketDominance } from '@/components/MarketDominance';
 import { MarketHeatmap } from '@/components/MarketHeatmap';
 import { EconomicCalendar } from '@/components/EconomicCalendar';
+import { SectionNav } from '@/components/SectionNav';
 
 export default function Home() {
   return (
@@ -37,24 +37,54 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Terminal Dashboard - Full Width */}
-      <section className="relative z-10 px-8 py-8" aria-label="Cryptocurrency market dashboard">
+      {/* Section Navigation */}
+      <SectionNav />
+
+      {/* Dashboard Section */}
+      <section id="dashboard" className="relative z-10 px-8 py-8" aria-label="Cryptocurrency market dashboard">
         <div className="max-w-[1900px] mx-auto">
-          {/* Bento Grid - Cleaner Layout */}
           <div className="grid grid-cols-12 gap-5 auto-rows-[minmax(300px,auto)]" role="region" aria-label="Market data widgets">
-            {/* Row 1: Primary Metrics */}
             <BTCPriceTicker />
             <FearGreedIndex />
             <MarketDominance />
-
-            {/* Row 2: Market Overview */}
             <MarketHeatmap />
             <EconomicCalendar />
-
-            {/* Row 3: Trading Metrics */}
             <LiquidationBubbles />
             <FundingRates />
           </div>
+        </div>
+      </section>
+
+      {/* Charts Section */}
+      <section id="charts" className="relative z-10 px-8 py-8">
+        <div className="max-w-[1900px] mx-auto">
+          <div className="section-header">
+            <span className="section-title">Interactive Charts</span>
+            <div className="section-divider"></div>
+          </div>
+          <div className="text-gray-600 text-center py-20">Charts coming soon</div>
+        </div>
+      </section>
+
+      {/* Community Section */}
+      <section id="community" className="relative z-10 px-8 py-8">
+        <div className="max-w-[1900px] mx-auto">
+          <div className="section-header">
+            <span className="section-title">Community</span>
+            <div className="section-divider"></div>
+          </div>
+          <div className="text-gray-600 text-center py-20">Community coming soon</div>
+        </div>
+      </section>
+
+      {/* Signals Section */}
+      <section id="signals" className="relative z-10 px-8 py-8">
+        <div className="max-w-[1900px] mx-auto">
+          <div className="section-header">
+            <span className="section-title">Signals</span>
+            <div className="section-divider"></div>
+          </div>
+          <div className="text-gray-600 text-center py-20">Signals coming soon</div>
         </div>
       </section>
     </main>
