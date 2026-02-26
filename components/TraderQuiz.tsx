@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   quizQuestions,
   normalizeScores,
@@ -17,65 +18,72 @@ export function TraderQuiz() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="bento-item col-span-12 lg:col-span-3 scroll-fade-in">
+    <div className="bento-item col-span-12 md:col-span-6 lg:col-span-3 scroll-fade-in">
       <div className="item-header">
         <span className="item-title">TRADER QUIZ</span>
       </div>
 
-      <div className="flex flex-col items-center justify-center h-[300px] text-center">
-        <div className="text-5xl mb-4">{'\uD83E\uDDD0'}</div>
-        <p className="text-white font-bold text-lg mb-2">
+      <div className="flex flex-col items-center justify-center h-[260px] sm:h-[300px] text-center">
+        <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{'\uD83E\uDDD0'}</div>
+        <p className="text-white font-display font-bold text-base sm:text-lg mb-2">
           What Type of Trader Are You?
         </p>
-        <p className="text-gray-400 text-sm mb-6 leading-relaxed max-w-[220px]">
+        <p className="text-[#a0a0a0] text-xs sm:text-sm mb-5 sm:mb-6 leading-relaxed max-w-[220px]">
           Discover your trading personality and get personalized tool recommendations.
         </p>
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-[#c4f82e] text-black font-bold py-3 px-8 rounded-xl hover:bg-[#a8e024] transition-colors text-sm"
+          className="bg-[#c4f82e] text-black font-display font-bold py-3 px-8 rounded-xl hover:bg-[#a8e024] transition-colors text-xs sm:text-sm"
         >
           Take the Quiz
         </button>
       </div>
 
-      {isOpen && <QuizModal onClose={() => setIsOpen(false)} />}
+      {isOpen && createPortal(
+        <QuizModal onClose={() => setIsOpen(false)} />,
+        document.body
+      )}
     </div>
   );
 }
 
-function QuizModal({ onClose }: { onClose: () => void }) {
+export function QuizModal({ onClose }: { onClose: () => void }) {
   const [screen, setScreen] = useState<Screen>('intro');
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const questionRef = useRef(0);
   const [scores, setScores] = useState<Scores>(INITIAL_SCORES);
   const [profile, setProfile] = useState<TraderProfile | null>(null);
   const [normalized, setNormalized] = useState<Scores>(INITIAL_SCORES);
 
   const handleAnswer = useCallback(
     (optionScores: Scores) => {
-      setScores((prev) => {
-        const newScores: Scores = {
-          bias: prev.bias + optionScores.bias,
-          risk: prev.risk + optionScores.risk,
-          discipline: prev.discipline + optionScores.discipline,
-          emotion: prev.emotion + optionScores.emotion,
-        };
+      const q = questionRef.current;
+      setScores((prev) => ({
+        bias: prev.bias + optionScores.bias,
+        risk: prev.risk + optionScores.risk,
+        discipline: prev.discipline + optionScores.discipline,
+        emotion: prev.emotion + optionScores.emotion,
+      }));
 
-        if (currentQuestion < quizQuestions.length - 1) {
-          setCurrentQuestion((q) => q + 1);
-        } else {
-          setProfile(getProfile(newScores));
-          setNormalized(normalizeScores(newScores));
+      if (q < quizQuestions.length - 1) {
+        questionRef.current = q + 1;
+        setCurrentQuestion(q + 1);
+      } else {
+        // Compute final scores inline since setScores is batched
+        setScores((final) => {
+          setProfile(getProfile(final));
+          setNormalized(normalizeScores(final));
           setScreen('email');
-        }
-
-        return newScores;
-      });
+          return final;
+        });
+      }
     },
-    [currentQuestion]
+    []
   );
 
   const reset = useCallback(() => {
     setScreen('intro');
+    questionRef.current = 0;
     setCurrentQuestion(0);
     setScores(INITIAL_SCORES);
     setProfile(null);
@@ -94,52 +102,27 @@ function QuizModal({ onClose }: { onClose: () => void }) {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(12px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.88)', backdropFilter: 'blur(16px)' }}
     >
       <button
         onClick={onClose}
-        className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors text-2xl"
+        className="absolute top-4 right-4 sm:top-6 sm:right-6 text-[#5a5a5a] hover:text-white transition-colors text-xl sm:text-2xl"
         aria-label="Close quiz"
       >
         ✕
       </button>
 
-      <div className="w-full max-w-[600px] bg-gradient-to-b from-[#121212] to-[#0a0a0a] border border-white/10 rounded-3xl p-8 relative overflow-hidden">
+      <div className="w-full max-w-[600px] bg-gradient-to-b from-[#111] to-[#080808] border border-white/[0.07] rounded-2xl sm:rounded-3xl p-5 sm:p-8 relative overflow-hidden max-h-[90vh] overflow-y-auto">
         <div
           className="absolute top-0 left-0 right-0 h-px"
-          style={{
-            background:
-              'linear-gradient(90deg, transparent 0%, rgba(196,248,46,0.3) 50%, transparent 100%)',
-          }}
+          style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196,248,46,0.25) 50%, transparent 100%)' }}
         />
 
-        {screen === 'intro' && (
-          <QuizIntro onStart={() => setScreen('quiz')} />
-        )}
-
-        {screen === 'quiz' && (
-          <QuizQuestionScreen
-            questionIndex={currentQuestion}
-            onAnswer={handleAnswer}
-          />
-        )}
-
-        {screen === 'email' && profile && (
-          <QuizEmailGate
-            profile={profile}
-            onReveal={() => setScreen('result')}
-          />
-        )}
-
-        {screen === 'result' && profile && (
-          <QuizResult
-            profile={profile}
-            normalized={normalized}
-            onRetake={reset}
-            onClose={onClose}
-          />
-        )}
+        {screen === 'intro' && <QuizIntro onStart={() => setScreen('quiz')} />}
+        {screen === 'quiz' && <QuizQuestionScreen questionIndex={currentQuestion} onAnswer={handleAnswer} />}
+        {screen === 'email' && profile && <QuizEmailGate profile={profile} onReveal={() => setScreen('result')} />}
+        {screen === 'result' && profile && <QuizResult profile={profile} normalized={normalized} onRetake={reset} onClose={onClose} />}
       </div>
     </div>
   );
@@ -147,28 +130,24 @@ function QuizModal({ onClose }: { onClose: () => void }) {
 
 function QuizIntro({ onStart }: { onStart: () => void }) {
   return (
-    <div className="text-center py-8">
-      <div className="text-6xl mb-6">{'\uD83E\uDDD0'}</div>
-      <h2 className="text-white text-2xl font-bold mb-3">
+    <div className="text-center py-4 sm:py-8">
+      <div className="text-5xl sm:text-6xl mb-4 sm:mb-6">{'\uD83E\uDDD0'}</div>
+      <h2 className="text-white text-xl sm:text-2xl font-display font-bold mb-3">
         Trader Profile Quiz
       </h2>
-      <p className="text-gray-400 text-sm mb-2 max-w-[400px] mx-auto leading-relaxed">
-        8 questions. 4 dimensions. Discover your trading personality and
-        find out which tools match your style.
+      <p className="text-[#a0a0a0] text-xs sm:text-sm mb-2 max-w-[400px] mx-auto leading-relaxed">
+        8 questions. 4 dimensions. Discover your trading personality and find out which tools match your style.
       </p>
-      <p className="text-gray-600 text-xs mb-8">Takes about 1 minute</p>
+      <p className="text-[#5a5a5a] text-[10px] sm:text-xs mb-6 sm:mb-8">Takes about 1 minute</p>
       <button
         onClick={onStart}
-        className="bg-[#c4f82e] text-black font-bold py-3 px-10 rounded-xl hover:bg-[#a8e024] transition-colors text-sm"
+        className="bg-[#c4f82e] text-black font-display font-bold py-3 px-10 rounded-xl hover:bg-[#a8e024] transition-colors text-xs sm:text-sm"
       >
         Start Quiz
       </button>
-      <div className="mt-6 flex justify-center gap-1.5">
+      <div className="mt-5 sm:mt-6 flex justify-center gap-1.5">
         {Array.from({ length: quizQuestions.length }).map((_, i) => (
-          <div
-            key={i}
-            className="w-2 h-2 rounded-full bg-white/10"
-          />
+          <div key={i} className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white/[0.07]" />
         ))}
       </div>
     </div>
@@ -186,31 +165,29 @@ function QuizQuestionScreen({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <span className="text-xs text-gray-500 font-mono">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <span className="text-[10px] sm:text-xs text-[#5a5a5a] font-mono">
           {questionIndex + 1} / {quizQuestions.length}
         </span>
-        <span className="text-xs text-[#c4f82e]/60 uppercase tracking-wider">
+        <span className="text-[10px] sm:text-xs text-[#c4f82e]/50 font-display uppercase tracking-wider">
           {CATEGORY_LABELS[q.category]}
         </span>
       </div>
-      <div className="w-full h-1 bg-white/5 rounded-full mb-8">
+      <div className="w-full h-0.5 sm:h-1 bg-white/[0.04] rounded-full mb-6 sm:mb-8">
         <div
           className="h-full bg-[#c4f82e] rounded-full transition-all duration-500 ease-out"
-          style={{
-            width: `${((questionIndex + 1) / quizQuestions.length) * 100}%`,
-          }}
+          style={{ width: `${((questionIndex + 1) / quizQuestions.length) * 100}%` }}
         />
       </div>
 
-      <p className="text-white text-lg font-semibold mb-6">{q.question}</p>
+      <p className="text-white text-base sm:text-lg font-semibold mb-4 sm:mb-6">{q.question}</p>
 
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {q.options.map((opt, i) => (
           <button
             key={i}
             onClick={() => onAnswer(opt.scores)}
-            className="w-full text-left px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-sm text-gray-300 hover:border-[#c4f82e]/40 hover:text-white hover:bg-white/10 transition-all duration-200"
+            className="w-full text-left px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/[0.06] text-xs sm:text-sm text-[#a0a0a0] hover:border-[#c4f82e]/30 hover:text-white hover:bg-white/[0.06] transition-all duration-200"
           >
             {opt.label}
           </button>
@@ -247,10 +224,10 @@ function QuizEmailGate({
   };
 
   return (
-    <div className="text-center py-8">
-      <div className="text-5xl mb-4">{profile.icon}</div>
-      <p className="text-white font-bold text-xl mb-1">Your result is ready!</p>
-      <p className="text-gray-400 text-sm mb-6">
+    <div className="text-center py-4 sm:py-8">
+      <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{profile.icon}</div>
+      <p className="text-white font-display font-bold text-lg sm:text-xl mb-1">Your result is ready!</p>
+      <p className="text-[#a0a0a0] text-xs sm:text-sm mb-5 sm:mb-6">
         Enter your email to reveal your trader profile.
       </p>
       <form onSubmit={handleSubmit} className="space-y-3 max-w-[360px] mx-auto">
@@ -260,18 +237,18 @@ function QuizEmailGate({
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
           required
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#c4f82e]/40 transition-colors"
+          className="w-full bg-white/[0.03] border border-white/[0.07] rounded-xl px-4 py-3 text-sm text-white placeholder-[#5a5a5a] focus:outline-none focus:border-[#c4f82e]/30 transition-colors"
         />
         <button
           type="submit"
-          className="w-full bg-[#c4f82e] text-black font-bold py-3 rounded-xl hover:bg-[#a8e024] transition-colors text-sm"
+          className="w-full bg-[#c4f82e] text-black font-display font-bold py-3 rounded-xl hover:bg-[#a8e024] transition-colors text-xs sm:text-sm"
         >
           Reveal My Profile
         </button>
       </form>
       <button
         onClick={onReveal}
-        className="text-gray-600 text-xs mt-4 hover:text-gray-400 transition-colors"
+        className="text-[#5a5a5a] text-[10px] sm:text-xs mt-4 hover:text-[#a0a0a0] transition-colors"
       >
         Skip
       </button>
@@ -326,32 +303,32 @@ function QuizResult({
 
   return (
     <div className="text-center">
-      <div className="text-5xl mb-3">{profile.icon}</div>
-      <h3 className="text-[#c4f82e] font-bold text-2xl mb-1">{profile.name}</h3>
+      <div className="text-4xl sm:text-5xl mb-3">{profile.icon}</div>
+      <h3 className="text-[#c4f82e] font-display font-bold text-xl sm:text-2xl mb-1">{profile.name}</h3>
 
-      <div className="flex justify-center gap-2 mb-4">
+      <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-4">
         {profile.traits.map((trait) => (
           <span
             key={trait}
-            className="text-xs px-3 py-1 rounded-full bg-[#c4f82e]/10 text-[#c4f82e] border border-[#c4f82e]/20"
+            className="text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[#c4f82e]/8 text-[#c4f82e] border border-[#c4f82e]/15"
           >
             {trait}
           </span>
         ))}
       </div>
 
-      <p className="text-gray-400 text-sm leading-relaxed max-w-[440px] mx-auto mb-6">
+      <p className="text-[#a0a0a0] text-xs sm:text-sm leading-relaxed max-w-[440px] mx-auto mb-5 sm:mb-6">
         {profile.description}
       </p>
 
-      <div className="space-y-3 mb-6 text-left max-w-[400px] mx-auto">
+      <div className="space-y-2.5 sm:space-y-3 mb-5 sm:mb-6 text-left max-w-[400px] mx-auto">
         {DIMENSION_LABELS.map(({ key, label }) => (
           <div key={key}>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-500">{label}</span>
-              <span className="text-gray-400 font-mono">{normalized[key]}%</span>
+            <div className="flex justify-between text-[10px] sm:text-xs mb-1">
+              <span className="text-[#5a5a5a]">{label}</span>
+              <span className="text-[#a0a0a0] font-mono">{normalized[key]}%</span>
             </div>
-            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className="w-full h-1 sm:h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#c4f82e] rounded-full transition-all duration-1000 ease-out"
                 style={{ width: `${normalized[key]}%` }}
@@ -361,16 +338,16 @@ function QuizResult({
         ))}
       </div>
 
-      <div className="mb-6">
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">
+      <div className="mb-5 sm:mb-6">
+        <p className="text-[10px] sm:text-xs text-[#5a5a5a] font-display uppercase tracking-wider mb-2 sm:mb-3">
           Recommended for you
         </p>
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
           {profile.recommendedTools.map((tool) => (
             <button
               key={tool.name}
               onClick={() => handleToolClick(tool.anchor)}
-              className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:border-[#c4f82e]/40 hover:text-white transition-all"
+              className="text-[10px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[#a0a0a0] hover:border-[#c4f82e]/30 hover:text-white transition-all"
             >
               {tool.name} →
             </button>
@@ -378,16 +355,16 @@ function QuizResult({
         </div>
       </div>
 
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-2 sm:gap-3">
         <button
           onClick={handleShare}
-          className="px-6 py-2.5 rounded-xl bg-[#c4f82e] text-black font-bold text-sm hover:bg-[#a8e024] transition-colors"
+          className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-[#c4f82e] text-black font-display font-bold text-xs sm:text-sm hover:bg-[#a8e024] transition-colors"
         >
           {copied ? 'Copied!' : 'Share Result'}
         </button>
         <button
           onClick={onRetake}
-          className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-sm hover:border-white/20 hover:text-white transition-all"
+          className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.07] text-[#a0a0a0] text-xs sm:text-sm hover:border-white/15 hover:text-white transition-all"
         >
           Retake Quiz
         </button>
