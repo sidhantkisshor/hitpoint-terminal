@@ -159,3 +159,44 @@ body {
     transform: scale(0.95);
   }
 }
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.section-divider {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(196, 248, 46, 0.3) 0%, transparent 100%);
+}
+
+/* Scroll Animations */
+.scroll-fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.scroll-fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children */
+.scroll-fade-in.visible:nth-child(1) { transition-delay: 0ms; }
+.scroll-fade-in.visible:nth-child(2) { transition-delay: 100ms; }
+.scroll-fade-in.visible:nth-child(3) { transition-delay: 200ms; }
+.scroll-fade-in.visible:nth-child(4) { transition-delay: 300ms; }
