@@ -28,72 +28,51 @@ export function SimulatorDashboard() {
   const btcTicker = useMarketStore((s) => s.btcTicker);
   const lastEquityPointRef = useRef<number>(0);
 
-  const activePosition = useSimulatorStore((s) => s.activePosition);
+  // Only subscribe to status for conditional rendering of the daily reset interval
   const status = useSimulatorStore((s) => s.status);
-  const config = useSimulatorStore((s) => s.config);
-  const currentBalance = useSimulatorStore((s) => s.currentBalance);
-  const startingBalance = useSimulatorStore((s) => s.startingBalance);
-  const dailyStartBalance = useSimulatorStore((s) => s.dailyStartBalance);
-  const startDate = useSimulatorStore((s) => s.startDate);
-  const tradingDays = useSimulatorStore((s) => s.tradingDays);
-  const trades = useSimulatorStore((s) => s.trades);
-
-  const updateUnrealizedPnl = useSimulatorStore((s) => s.updateUnrealizedPnl);
-  const closePosition = useSimulatorStore((s) => s.closePosition);
-  const addEquityPoint = useSimulatorStore((s) => s.addEquityPoint);
-  const addViolation = useSimulatorStore((s) => s.addViolation);
-  const failChallenge = useSimulatorStore((s) => s.failChallenge);
-  const passChallenge = useSimulatorStore((s) => s.passChallenge);
   const checkDailyReset = useSimulatorStore((s) => s.checkDailyReset);
 
-  // Price tick loop
+  // Price tick loop — reads ALL state from getState() to avoid stale closures
   useEffect(() => {
-    if (status !== 'active' || !btcTicker) return;
+    if (!btcTicker) return;
+
+    const state = useSimulatorStore.getState();
+    if (state.status !== 'active') return;
 
     const currentPrice = parseFloat(btcTicker.price);
     if (isNaN(currentPrice) || currentPrice <= 0) return;
 
-    checkDailyReset();
+    state.checkDailyReset();
 
-    if (activePosition) {
-      const pnl = calculateUnrealizedPnl(
-        activePosition.direction,
-        activePosition.entryPrice,
-        currentPrice,
-        activePosition.size
-      );
-      updateUnrealizedPnl(pnl);
+    if (state.activePosition) {
+      const pos = state.activePosition;
+      const pnl = calculateUnrealizedPnl(pos.direction, pos.entryPrice, currentPrice, pos.size);
+      state.updateUnrealizedPnl(pnl);
 
-      const tpSlResult = checkTpSlHit(
-        activePosition.direction,
-        currentPrice,
-        activePosition.takeProfit,
-        activePosition.stopLoss
-      );
-
+      // Check TP/SL hit
+      const tpSlResult = checkTpSlHit(pos.direction, currentPrice, pos.takeProfit, pos.stopLoss);
       if (tpSlResult) {
-        closePosition(currentPrice, tpSlResult);
-        if (tpSlResult === 'sl') {
-          addViolation('Stop-Loss Hit', `Position closed at $${currentPrice.toLocaleString()}`);
-        }
+        state.closePosition(currentPrice, tpSlResult);
+        // SL hits are normal trading — not logged as violations
         return;
       }
 
-      const effectiveBalance = currentBalance + pnl;
-      const dailyLoss = checkDailyLoss(dailyStartBalance, effectiveBalance, config.dailyLossLimit);
-      const totalDD = checkTotalDrawdown(startingBalance, effectiveBalance, config.totalLossLimit);
+      // Check daily loss / total drawdown with effective balance
+      const effectiveBalance = state.currentBalance + pnl;
+      const dailyLoss = checkDailyLoss(state.dailyStartBalance, effectiveBalance, state.config.dailyLossLimit);
+      const totalDD = checkTotalDrawdown(state.startingBalance, effectiveBalance, state.config.totalLossLimit);
 
       if (dailyLoss.breached) {
-        closePosition(currentPrice, 'rule-violation');
-        addViolation('Daily Loss Limit', `Daily loss of ${(dailyLoss.currentLoss * 100).toFixed(1)}% exceeded ${(config.dailyLossLimit * 100)}% limit`);
-        failChallenge('Daily loss limit breached');
+        state.closePosition(currentPrice, 'rule-violation');
+        state.addViolation('Daily Loss Limit', `Daily loss of ${(dailyLoss.currentLoss * 100).toFixed(1)}% exceeded ${(state.config.dailyLossLimit * 100)}% limit`);
+        state.failChallenge('Daily loss limit breached');
         return;
       }
 
       if (totalDD.breached) {
-        closePosition(currentPrice, 'rule-violation');
-        addViolation('Total Drawdown', `Drawdown of ${(totalDD.currentDrawdown * 100).toFixed(1)}% exceeded ${(config.totalLossLimit * 100)}% limit`);
-        failChallenge('Total drawdown limit breached');
+        state.closePosition(currentPrice, 'rule-violation');
+        state.addViolation('Total Drawdown', `Drawdown of ${(totalDD.currentDrawdown * 100).toFixed(1)}% exceeded ${(state.config.totalLossLimit * 100)}% limit`);
+        state.failChallenge('Total drawdown limit breached');
         return;
       }
     }
@@ -101,44 +80,47 @@ export function SimulatorDashboard() {
     // Equity curve (throttled: 1 point per 30 seconds)
     const now = Date.now();
     if (now - lastEquityPointRef.current > 30000) {
-      const effectiveBalance = currentBalance + (activePosition?.unrealizedPnl ?? 0);
-      addEquityPoint(effectiveBalance);
+      // Re-read state after potential position close above
+      const fresh = useSimulatorStore.getState();
+      const effectiveBalance = fresh.currentBalance + (fresh.activePosition?.unrealizedPnl ?? 0);
+      fresh.addEquityPoint(effectiveBalance);
       lastEquityPointRef.current = now;
     }
 
     // Check max trading days
-    if (startDate) {
-      const daysCheck = checkMaxTradingDays(startDate, config.maxTradingDays);
+    if (state.startDate) {
+      const daysCheck = checkMaxTradingDays(state.startDate, state.config.maxTradingDays);
       if (daysCheck.exceeded) {
-        if (activePosition) {
-          closePosition(parseFloat(btcTicker.price), 'rule-violation');
+        const s = useSimulatorStore.getState();
+        if (s.activePosition) {
+          s.closePosition(currentPrice, 'rule-violation');
         }
-        addViolation('Max Trading Days', `Challenge exceeded ${config.maxTradingDays} day limit`);
-        failChallenge('Maximum trading days exceeded');
+        s.addViolation('Max Trading Days', `Challenge exceeded ${state.config.maxTradingDays} day limit`);
+        s.failChallenge('Maximum trading days exceeded');
         return;
       }
     }
 
-    // Check if challenge can be passed
-    if (!activePosition && trades.length > 0) {
-      const profitCheck = checkProfitTarget(currentBalance, startingBalance, config.profitTarget);
+    // Check if challenge can be passed (re-read fresh state after any closes)
+    const latest = useSimulatorStore.getState();
+    if (!latest.activePosition && latest.trades.length > 0 && latest.status === 'active') {
+      const profitCheck = checkProfitTarget(latest.currentBalance, latest.startingBalance, latest.config.profitTarget);
       if (profitCheck.reached) {
-        const consistency = calculateConsistencyScore(trades);
-        const emotional = calculateEmotionalScore(trades);
+        const consistency = calculateConsistencyScore(latest.trades);
+        const emotional = calculateEmotionalScore(latest.trades);
         const evaluation = evaluateChallenge(
-          currentBalance,
-          startingBalance,
-          tradingDays.length,
-          config,
+          latest.currentBalance,
+          latest.startingBalance,
+          latest.tradingDays.length,
+          latest.config,
           consistency,
           emotional
         );
         if (evaluation.canPass) {
-          passChallenge();
+          latest.passChallenge();
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [btcTicker]);
 
   // Daily reset interval
@@ -149,8 +131,8 @@ export function SimulatorDashboard() {
   }, [status, checkDailyReset]);
 
   return (
-    <div className="max-w-[1900px] mx-auto px-8 py-8">
-      <div className="grid grid-cols-12 gap-5">
+    <div className="max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      <div className="grid grid-cols-12 gap-3 sm:gap-4 lg:gap-5">
         <ChallengeHeader />
         <PriceDisplay />
         <TradePanel />

@@ -160,7 +160,7 @@ export function calculateEmotionalScore(trades: CompletedTrade[]): number {
 
 export function calculateRiskScore(
   trades: CompletedTrade[],
-  _config: ChallengeConfig
+  config: ChallengeConfig
 ): number {
   if (trades.length === 0) return 100;
 
@@ -169,8 +169,8 @@ export function calculateRiskScore(
 
   for (const trade of trades) {
     const riskAmount = trade.size * (Math.abs(trade.entryPrice - trade.stopLoss) / trade.entryPrice);
-    const approxBalance = trade.size + trade.pnl; // rough approximation
-    const riskOfAccount = approxBalance > 0 ? riskAmount / approxBalance : 0;
+    // Use account size as denominator — the balance stays near this value for well-managed accounts
+    const riskOfAccount = riskAmount / config.accountSize;
 
     if (riskOfAccount > 0.015) {
       score -= 5;

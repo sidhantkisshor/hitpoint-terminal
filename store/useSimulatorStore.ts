@@ -173,14 +173,14 @@ export const useSimulatorStore = create<SimulatorStore>()(
       })),
 
       closePosition: (exitPrice, closeReason) => {
-        const { activePosition, trades, currentBalance, highWaterMark } = get();
+        const { activePosition, trades, currentBalance, highWaterMark, startingBalance } = get();
         if (!activePosition) return;
 
         const pnl = activePosition.direction === 'long'
           ? activePosition.size * (exitPrice - activePosition.entryPrice) / activePosition.entryPrice
           : activePosition.size * (activePosition.entryPrice - exitPrice) / activePosition.entryPrice;
 
-        const pnlPercent = pnl / currentBalance;
+        const pnlPercent = pnl / startingBalance;
         const newBalance = currentBalance + pnl;
 
         const completedTrade: CompletedTrade = {

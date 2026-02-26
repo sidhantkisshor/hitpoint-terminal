@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 const SECTIONS = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -60,12 +61,12 @@ export function SectionNav() {
               {section.label}
             </button>
           ))}
-          <a
+          <Link
             href="/simulator"
             className="px-4 sm:px-5 py-2 rounded-full text-[11px] font-display font-semibold uppercase tracking-wider whitespace-nowrap transition-all duration-300 text-[#c4f82e] border border-[#c4f82e]/20 hover:bg-[#c4f82e]/10 hover:border-[#c4f82e]/40 ml-auto"
           >
             Challenge Simulator
-          </a>
+          </Link>
         </div>
       </div>
     </nav>

@@ -137,8 +137,8 @@ export function EvaluationReport() {
               ['Total Trades', `${trades.length}`, true],
               ['Win Rate', `${winRate.toFixed(1)}%`, winRate >= 50],
               ['Avg R:R', `${avgRR.toFixed(2)}`, avgRR >= 1],
-              ['Best Trade', `+$${bestTrade.toFixed(2)}`, true],
-              ['Worst Trade', `-$${Math.abs(worstTrade).toFixed(2)}`, false],
+              ['Best Trade', `${bestTrade >= 0 ? '+' : ''}$${bestTrade.toFixed(2)}`, bestTrade >= 0],
+              ['Worst Trade', `${worstTrade >= 0 ? '+' : ''}$${worstTrade.toFixed(2)}`, worstTrade >= 0],
               ['Trading Days', `${tradingDays.length}`, true],
             ].map(([label, value, positive]) => (
               <div key={label as string} className="flex justify-between py-2 border-b border-white/5">
