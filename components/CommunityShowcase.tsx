@@ -39,12 +39,13 @@ export function CommunityShowcase() {
             }`}
           >
             <div className="h-full flex flex-col">
-              <div className="flex-1 rounded-xl overflow-hidden bg-black/40 border border-white/5">
+              <div className="flex-1 rounded-xl overflow-hidden bg-black/40 border border-white/5 flex items-center justify-center">
                 <img
                   src={t.image}
                   alt={`Testimonial from ${t.author}`}
                   className="w-full h-full object-cover"
                   loading="lazy"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               </div>
               <div className="mt-4">
