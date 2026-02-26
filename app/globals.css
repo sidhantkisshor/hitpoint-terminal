@@ -200,3 +200,19 @@ body {
 .scroll-fade-in.visible:nth-child(2) { transition-delay: 100ms; }
 .scroll-fade-in.visible:nth-child(3) { transition-delay: 200ms; }
 .scroll-fade-in.visible:nth-child(4) { transition-delay: 300ms; }
+
+/* Popup slide-up animation */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out;
+}

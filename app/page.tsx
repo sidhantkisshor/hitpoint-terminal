@@ -8,6 +8,10 @@ import { EconomicCalendar } from '@/components/EconomicCalendar';
 import { SectionNav } from '@/components/SectionNav';
 import { InteractiveCharts } from '@/components/InteractiveCharts';
 import { ScrollAnimator } from '@/components/ScrollAnimator';
+import { CommunityShowcase } from '@/components/CommunityShowcase';
+import { TwitterFeed } from '@/components/TwitterFeed';
+import { PartnerLogos } from '@/components/PartnerLogos';
+import { NewsletterPopup } from '@/components/NewsletterPopup';
 
 export default function Home() {
   return (
@@ -77,7 +81,11 @@ export default function Home() {
             <span className="section-title">Community</span>
             <div className="section-divider"></div>
           </div>
-          <div className="text-gray-600 text-center py-20">Community coming soon</div>
+          <div className="grid grid-cols-12 gap-5">
+            <CommunityShowcase />
+            <TwitterFeed />
+            <PartnerLogos />
+          </div>
         </div>
       </section>
 
@@ -91,6 +99,7 @@ export default function Home() {
           <div className="text-gray-600 text-center py-20">Signals coming soon</div>
         </div>
       </section>
+      <NewsletterPopup />
     </main>
   );
 }
