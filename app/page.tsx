@@ -6,6 +6,7 @@ import { MarketDominance } from '@/components/MarketDominance';
 import { MarketHeatmap } from '@/components/MarketHeatmap';
 import { EconomicCalendar } from '@/components/EconomicCalendar';
 import { SectionNav } from '@/components/SectionNav';
+import { InteractiveCharts } from '@/components/InteractiveCharts';
 
 export default function Home() {
   return (
@@ -62,7 +63,7 @@ export default function Home() {
             <span className="section-title">Interactive Charts</span>
             <div className="section-divider"></div>
           </div>
-          <div className="text-gray-600 text-center py-20">Charts coming soon</div>
+          <InteractiveCharts />
         </div>
       </section>
 
