@@ -7,6 +7,7 @@ import { MarketHeatmap } from '@/components/MarketHeatmap';
 import { EconomicCalendar } from '@/components/EconomicCalendar';
 import { SectionNav } from '@/components/SectionNav';
 import { InteractiveCharts } from '@/components/InteractiveCharts';
+import { ScrollAnimator } from '@/components/ScrollAnimator';
 
 export default function Home() {
   return (
@@ -18,6 +19,8 @@ export default function Home() {
         <div className="absolute bottom-1/4 right-1/5 w-[600px] h-[600px] bg-[#c4f82e]/3 rounded-full blur-[160px] animate-pulse" style={{animationDelay: '1s'}}></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[#c4f82e]/2 rounded-full blur-[200px] opacity-20"></div>
       </div>
+
+      <ScrollAnimator />
 
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-2xl bg-black/85 border-b border-white/10 shadow-2xl">
