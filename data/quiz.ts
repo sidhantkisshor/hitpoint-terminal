@@ -105,6 +105,7 @@ export const quizQuestions: QuizQuestion[] = [
   },
 ];
 
+// Array order determines tie-breaking priority (first wins)
 export const traderProfiles: TraderProfile[] = [
   {
     key: 'analyst',
@@ -118,7 +119,7 @@ export const traderProfiles: TraderProfile[] = [
       { name: 'Long/Short Ratio', anchor: 'dashboard' },
       { name: 'Economic Calendar', anchor: 'dashboard' },
     ],
-    matcher: (s) => s.discipline * 2 + (20 - s.risk) + (15 - s.emotion),
+    matcher: (s) => s.discipline * 2 - s.risk - s.emotion,
   },
   {
     key: 'trend-follower',
@@ -132,7 +133,7 @@ export const traderProfiles: TraderProfile[] = [
       { name: 'Market Dominance', anchor: 'dashboard' },
       { name: 'Market Heatmap', anchor: 'dashboard' },
     ],
-    matcher: (s) => s.bias * 2 + s.discipline + 10,
+    matcher: (s) => s.bias * 2 + s.discipline,
   },
   {
     key: 'contrarian',
@@ -146,7 +147,7 @@ export const traderProfiles: TraderProfile[] = [
       { name: 'Fear & Greed Index', anchor: 'dashboard' },
       { name: 'Funding Rates', anchor: 'dashboard' },
     ],
-    matcher: (s) => -s.bias * 2 + s.discipline + 10,
+    matcher: (s) => -s.bias * 2 + s.discipline,
   },
   {
     key: 'high-risk',
@@ -160,19 +161,37 @@ export const traderProfiles: TraderProfile[] = [
       { name: 'Liquidation Bubbles', anchor: 'dashboard' },
       { name: 'Long/Short Ratio', anchor: 'dashboard' },
     ],
-    matcher: (s) => s.risk * 2 + s.emotion * 2 + (10 - s.discipline),
+    matcher: (s) => s.risk * 2 + s.emotion * 2 - s.discipline,
   },
 ];
+
+// Derive normalization ranges from question data so they stay in sync
+const SCORE_RANGES = (() => {
+  const dims: (keyof Scores)[] = ['bias', 'risk', 'discipline', 'emotion'];
+  const ranges = Object.fromEntries(dims.map((d) => [d, { min: 0, max: 0 }])) as Record<
+    keyof Scores,
+    { min: number; max: number }
+  >;
+
+  for (const q of quizQuestions) {
+    for (const dim of dims) {
+      const vals = q.options.map((o) => o.scores[dim]);
+      ranges[dim].min += Math.min(...vals);
+      ranges[dim].max += Math.max(...vals);
+    }
+  }
+  return ranges;
+})();
 
 export function normalizeScores(raw: Scores): Scores {
   const normalize = (val: number, min: number, max: number) =>
     Math.round(Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)));
 
   return {
-    bias: normalize(raw.bias, -6, 8),
-    risk: normalize(raw.risk, -8, 12),
-    discipline: normalize(raw.discipline, -8, 16),
-    emotion: normalize(raw.emotion, -6, 12),
+    bias: normalize(raw.bias, SCORE_RANGES.bias.min, SCORE_RANGES.bias.max),
+    risk: normalize(raw.risk, SCORE_RANGES.risk.min, SCORE_RANGES.risk.max),
+    discipline: normalize(raw.discipline, SCORE_RANGES.discipline.min, SCORE_RANGES.discipline.max),
+    emotion: normalize(raw.emotion, SCORE_RANGES.emotion.min, SCORE_RANGES.emotion.max),
   };
 }
 

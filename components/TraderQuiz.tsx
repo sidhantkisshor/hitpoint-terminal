@@ -1,30 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { quizQuestions, archetypes } from '@/data/quiz';
+import { quizQuestions, normalizeScores, getProfile, type Scores, type TraderProfile } from '@/data/quiz';
 
 export function TraderQuiz() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<string[]>([]);
-  const [result, setResult] = useState<string | null>(null);
+  const [rawScores, setRawScores] = useState<Scores>({ bias: 0, risk: 0, discipline: 0, emotion: 0 });
+  const [profile, setProfile] = useState<TraderProfile | null>(null);
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
-  const handleAnswer = (archetype: string) => {
-    const newAnswers = [...answers, archetype];
-    setAnswers(newAnswers);
+  const handleAnswer = (optionScores: Scores) => {
+    const newScores: Scores = {
+      bias: rawScores.bias + optionScores.bias,
+      risk: rawScores.risk + optionScores.risk,
+      discipline: rawScores.discipline + optionScores.discipline,
+      emotion: rawScores.emotion + optionScores.emotion,
+    };
+    setRawScores(newScores);
 
     if (currentQuestion < quizQuestions.length - 1) {
       setCurrentQuestion((q) => q + 1);
     } else {
-      // Calculate result
-      const counts: Record<string, number> = {};
-      for (const a of newAnswers) {
-        counts[a] = (counts[a] || 0) + 1;
-      }
-      const winner = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
-      setResult(winner);
+      setProfile(getProfile(newScores));
     }
   };
 
@@ -48,14 +47,12 @@ export function TraderQuiz() {
 
   const reset = () => {
     setCurrentQuestion(0);
-    setAnswers([]);
-    setResult(null);
+    setRawScores({ bias: 0, risk: 0, discipline: 0, emotion: 0 });
+    setProfile(null);
     setEmail('');
     setEmailSubmitted(false);
     setShowResult(false);
   };
-
-  const archetype = result ? archetypes[result] : null;
 
   return (
     <div className="bento-item col-span-12 lg:col-span-3 scroll-fade-in">
@@ -65,7 +62,7 @@ export function TraderQuiz() {
 
       <div className="flex flex-col justify-center h-[300px]">
         {/* Quiz in progress */}
-        {!result && (
+        {!profile && (
           <div>
             <div className="text-xs text-gray-500 mb-3">
               {currentQuestion + 1} / {quizQuestions.length}
@@ -77,7 +74,7 @@ export function TraderQuiz() {
               {quizQuestions[currentQuestion].options.map((opt, i) => (
                 <button
                   key={i}
-                  onClick={() => handleAnswer(opt.archetype)}
+                  onClick={() => handleAnswer(opt.scores)}
                   className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-gray-300 hover:border-[#c4f82e]/40 hover:text-white hover:bg-white/10 transition-all duration-200"
                 >
                   {opt.label}
@@ -88,9 +85,9 @@ export function TraderQuiz() {
         )}
 
         {/* Email gate */}
-        {result && !showResult && (
+        {profile && !showResult && (
           <div className="text-center">
-            <div className="text-3xl mb-2">{archetype?.icon}</div>
+            <div className="text-3xl mb-2">{profile.icon}</div>
             <p className="text-white font-bold mb-1">Your result is ready!</p>
             <p className="text-gray-400 text-sm mb-4">Enter your email to see your trader type.</p>
             <form onSubmit={handleEmailSubmit} className="space-y-2">
@@ -119,11 +116,18 @@ export function TraderQuiz() {
         )}
 
         {/* Result */}
-        {showResult && archetype && (
+        {showResult && profile && (
           <div className="text-center">
-            <div className="text-4xl mb-3">{archetype.icon}</div>
-            <p className="text-[#c4f82e] font-bold text-lg">{archetype.name}</p>
-            <p className="text-gray-400 text-sm mt-2 leading-relaxed">{archetype.description}</p>
+            <div className="text-4xl mb-3">{profile.icon}</div>
+            <p className="text-[#c4f82e] font-bold text-lg">{profile.name}</p>
+            <p className="text-gray-400 text-sm mt-2 leading-relaxed">{profile.description}</p>
+            <div className="flex flex-wrap justify-center gap-2 mt-3">
+              {profile.traits.map((trait) => (
+                <span key={trait} className="text-[10px] px-2 py-1 rounded-full bg-[#c4f82e]/10 text-[#c4f82e] border border-[#c4f82e]/20">
+                  {trait}
+                </span>
+              ))}
+            </div>
             <button
               onClick={reset}
               className="mt-4 text-xs text-gray-500 hover:text-gray-300 transition-colors underline"
