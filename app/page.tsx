@@ -12,6 +12,9 @@ import { CommunityShowcase } from '@/components/CommunityShowcase';
 import { TwitterFeed } from '@/components/TwitterFeed';
 import { PartnerLogos } from '@/components/PartnerLogos';
 import { NewsletterPopup } from '@/components/NewsletterPopup';
+import { SignalsGallery } from '@/components/SignalsGallery';
+import { NewsletterSignup } from '@/components/NewsletterSignup';
+import { TraderQuiz } from '@/components/TraderQuiz';
 
 export default function Home() {
   return (
@@ -96,7 +99,11 @@ export default function Home() {
             <span className="section-title">Signals</span>
             <div className="section-divider"></div>
           </div>
-          <div className="text-gray-600 text-center py-20">Signals coming soon</div>
+          <div className="grid grid-cols-12 gap-5">
+            <SignalsGallery />
+            <NewsletterSignup />
+            <TraderQuiz />
+          </div>
         </div>
       </section>
       <NewsletterPopup />
