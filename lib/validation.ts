@@ -80,13 +80,6 @@ export const BinanceFundingRateSchema = z.array(
 
 export type BinanceFundingRateData = z.infer<typeof BinanceFundingRateSchema>;
 
-// Newsletter subscription validation
-export const NewsletterSchema = z.object({
-  email: z.string().email('Invalid email address'),
-});
-
-export type NewsletterData = z.infer<typeof NewsletterSchema>;
-
 // Helper function to safely parse and validate data
 export function safeValidate<T>(
   schema: z.ZodSchema<T>,

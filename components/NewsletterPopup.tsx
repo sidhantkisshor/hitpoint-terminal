@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
+const WHATSAPP_URL = 'https://wa.aisensy.com/+918062963333';
+
 export function NewsletterPopup() {
   const [isVisible, setIsVisible] = useState(false);
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     const dismissed = localStorage.getItem('newsletter-dismissed');
@@ -38,29 +38,6 @@ export function NewsletterPopup() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    setStatus('loading');
-    try {
-      const res = await fetch('/api/newsletter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      if (res.ok) {
-        setStatus('success');
-        localStorage.setItem('newsletter-dismissed', 'true');
-      } else {
-        setStatus('error');
-      }
-    } catch {
-      setStatus('error');
-    }
-  };
-
   if (!isVisible) return null;
 
   return (
@@ -76,46 +53,25 @@ export function NewsletterPopup() {
           </svg>
         </button>
 
-        {status === 'success' ? (
-          <div className="text-center py-3 sm:py-4">
-            <div className="text-2xl mb-2">&#10003;</div>
-            <p className="text-[#c4f82e] font-display font-bold text-lg">You&apos;re in!</p>
-            <p className="text-[#a0a0a0] text-xs sm:text-sm mt-1">Watch your inbox for weekly insights.</p>
-          </div>
-        ) : (
-          <>
-            <h3 className="text-white font-display font-bold text-base sm:text-lg mb-1">The Bitcoin Hitpoint Club</h3>
-            <p className="text-[#a0a0a0] text-xs sm:text-sm mb-4">
-              Get market structure analysis and Club updates delivered weekly.
-            </p>
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                required
-                className="flex-1 min-w-0 bg-white/[0.03] border border-white/[0.07] rounded-lg px-3 py-2 text-sm text-white placeholder-[#5a5a5a] focus:outline-none focus:border-[#c4f82e]/30 transition-colors"
-              />
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="bg-[#c4f82e] text-black font-display font-bold px-4 py-2 rounded-lg text-xs sm:text-sm hover:bg-[#a8e024] transition-colors disabled:opacity-50 shrink-0"
-              >
-                {status === 'loading' ? '...' : 'Join'}
-              </button>
-            </form>
-            {status === 'error' && (
-              <p className="text-red-400 text-[10px] sm:text-xs mt-2">Something went wrong. Try again.</p>
-            )}
-            <button
-              onClick={() => dismiss(true)}
-              className="text-[#3a3a3a] text-[10px] sm:text-xs mt-3 hover:text-[#5a5a5a] transition-colors"
-            >
-              Don&apos;t show again
-            </button>
-          </>
-        )}
+        <h3 className="text-white font-display font-bold text-base sm:text-lg mb-1">The Bitcoin Hitpoint Club</h3>
+        <p className="text-[#a0a0a0] text-xs sm:text-sm mb-4">
+          Join our WhatsApp community for market structure analysis and Club updates.
+        </p>
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => dismiss(true)}
+          className="block w-full bg-[#25D366] text-white font-display font-bold px-4 py-2.5 rounded-lg text-xs sm:text-sm hover:bg-[#1da851] transition-colors text-center"
+        >
+          Join on WhatsApp
+        </a>
+        <button
+          onClick={() => dismiss(true)}
+          className="text-[#3a3a3a] text-[10px] sm:text-xs mt-3 hover:text-[#5a5a5a] transition-colors"
+        >
+          Don&apos;t show again
+        </button>
       </div>
     </div>
   );

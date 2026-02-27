@@ -25,7 +25,8 @@
       "Bash(npm run:*)",
       "Bash(npm uninstall lightweight-charts recharts)",
       "mcp__claude_ai_Vercel__deploy_to_vercel",
-      "Bash(npx vercel deploy --yes)"
+      "Bash(npx vercel deploy --yes)",
+      "Bash(gh auth:*)"
     ],
     "deny": [],
     "ask": []

@@ -10,7 +10,7 @@ import {
   type TraderProfile,
 } from '@/data/quiz';
 
-type Screen = 'intro' | 'quiz' | 'email' | 'result';
+type Screen = 'intro' | 'quiz' | 'result';
 
 const INITIAL_SCORES: Scores = { bias: 0, risk: 0, discipline: 0, emotion: 0 };
 
@@ -73,7 +73,7 @@ export function QuizModal({ onClose }: { onClose: () => void }) {
         setScores((final) => {
           setProfile(getProfile(final));
           setNormalized(normalizeScores(final));
-          setScreen('email');
+          setScreen('result');
           return final;
         });
       }
@@ -121,7 +121,6 @@ export function QuizModal({ onClose }: { onClose: () => void }) {
 
         {screen === 'intro' && <QuizIntro onStart={() => setScreen('quiz')} />}
         {screen === 'quiz' && <QuizQuestionScreen questionIndex={currentQuestion} onAnswer={handleAnswer} />}
-        {screen === 'email' && profile && <QuizEmailGate profile={profile} onReveal={() => setScreen('result')} />}
         {screen === 'result' && profile && <QuizResult profile={profile} normalized={normalized} onRetake={reset} onClose={onClose} />}
       </div>
     </div>
@@ -193,65 +192,6 @@ function QuizQuestionScreen({
           </button>
         ))}
       </div>
-    </div>
-  );
-}
-
-function QuizEmailGate({
-  profile,
-  onReveal,
-}: {
-  profile: TraderProfile;
-  onReveal: () => void;
-}) {
-  const [email, setEmail] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    try {
-      await fetch('/api/newsletter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-    } catch {
-      // Best effort
-    }
-
-    onReveal();
-  };
-
-  return (
-    <div className="text-center py-4 sm:py-8">
-      <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{profile.icon}</div>
-      <p className="text-white font-display font-bold text-lg sm:text-xl mb-1">Your result is ready!</p>
-      <p className="text-[#a0a0a0] text-xs sm:text-sm mb-5 sm:mb-6">
-        Enter your email to reveal your trader profile.
-      </p>
-      <form onSubmit={handleSubmit} className="space-y-3 max-w-[360px] mx-auto">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="your@email.com"
-          required
-          className="w-full bg-white/[0.03] border border-white/[0.07] rounded-xl px-4 py-3 text-sm text-white placeholder-[#5a5a5a] focus:outline-none focus:border-[#c4f82e]/30 transition-colors"
-        />
-        <button
-          type="submit"
-          className="w-full bg-[#c4f82e] text-black font-display font-bold py-3 rounded-xl hover:bg-[#a8e024] transition-colors text-xs sm:text-sm"
-        >
-          Reveal My Profile
-        </button>
-      </form>
-      <button
-        onClick={onReveal}
-        className="text-[#5a5a5a] text-[10px] sm:text-xs mt-4 hover:text-[#a0a0a0] transition-colors"
-      >
-        Skip
-      </button>
     </div>
   );
 }
