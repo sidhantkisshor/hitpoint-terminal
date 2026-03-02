@@ -38,6 +38,9 @@ export async function GET(request: NextRequest) {
     i: Math.max(0, Math.min(100, Number(searchParams.get('i') ?? 50))),
   };
 
+  const rawName = searchParams.get('name');
+  const displayName = rawName ? rawName.slice(0, 30).replace(/[<>"'&]/g, '') : null;
+
   return new ImageResponse(
     (
       <div
@@ -69,8 +72,13 @@ export async function GET(request: NextRequest) {
         {/* Profile icon */}
         <div style={{ fontSize: 72, marginBottom: 8 }}>{profile.icon}</div>
 
-        {/* Profile name */}
-        <div style={{ fontSize: 42, fontWeight: 800, color: '#c4f82e', marginBottom: 4 }}>
+        {/* Profile name (with optional user name) */}
+        {displayName && (
+          <div style={{ fontSize: 24, color: '#a0a0a0', fontWeight: 600, marginBottom: 4 }}>
+            {displayName} is
+          </div>
+        )}
+        <div style={{ fontSize: displayName ? 38 : 42, fontWeight: 800, color: '#c4f82e', marginBottom: 4 }}>
           {profile.name}
         </div>
 

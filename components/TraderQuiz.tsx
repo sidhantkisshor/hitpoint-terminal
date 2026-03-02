@@ -20,7 +20,7 @@ const QUESTIONS_PER_QUIZ = 8;
 
 // --- URL helpers ---
 
-function buildQuizResultUrl(profile: TraderProfile, normalized: Scores): string {
+function buildQuizResultUrl(profile: TraderProfile, normalized: Scores, name?: string): string {
   const base = typeof window !== 'undefined' ? window.location.origin : 'https://hitpointterminal.com';
   const params = new URLSearchParams({
     quiz: profile.key,
@@ -29,7 +29,34 @@ function buildQuizResultUrl(profile: TraderProfile, normalized: Scores): string 
     d: normalized.discipline.toString(),
     i: normalized.independence.toString(),
   });
+  if (name) params.set('name', name);
   return `${base}/?${params.toString()}`;
+}
+
+function generateRid(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID().slice(0, 8);
+  }
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function submitQuizResult(rid: string, profile: TraderProfile, normalized: Scores, name?: string) {
+  fetch('/api/quiz/results', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      rid,
+      name: name || undefined,
+      profile: profile.key,
+      scores: {
+        c: normalized.conviction,
+        r: normalized.risk,
+        d: normalized.discipline,
+        i: normalized.independence,
+      },
+      timestamp: new Date().toISOString(),
+    }),
+  }).catch(() => { /* fire-and-forget */ });
 }
 
 const QuizParamsSchema = z.object({
@@ -38,15 +65,19 @@ const QuizParamsSchema = z.object({
   r: z.coerce.number().int().min(0).max(100),
   d: z.coerce.number().int().min(0).max(100),
   i: z.coerce.number().int().min(0).max(100),
+  name: z.string().max(30).optional(),
+  rid: z.string().max(64).optional(),
 });
 
-function parseQuizParams(params: URLSearchParams): { profile: TraderProfile; normalized: Scores } | null {
+function parseQuizParams(params: URLSearchParams): { profile: TraderProfile; normalized: Scores; name?: string; rid?: string } | null {
   const raw = {
     quiz: params.get('quiz'),
     c: params.get('c'),
     r: params.get('r'),
     d: params.get('d'),
     i: params.get('i'),
+    name: params.get('name') ?? undefined,
+    rid: params.get('rid') ?? undefined,
   };
   const parsed = QuizParamsSchema.safeParse(raw);
   if (!parsed.success) return null;
@@ -60,6 +91,8 @@ function parseQuizParams(params: URLSearchParams): { profile: TraderProfile; nor
       discipline: parsed.data.d,
       independence: parsed.data.i,
     },
+    name: parsed.data.name,
+    rid: parsed.data.rid,
   };
 }
 
@@ -71,6 +104,8 @@ function clearQuizUrlParams() {
   url.searchParams.delete('r');
   url.searchParams.delete('d');
   url.searchParams.delete('i');
+  url.searchParams.delete('name');
+  url.searchParams.delete('rid');
   window.history.replaceState({}, '', url.pathname);
 }
 
@@ -112,7 +147,7 @@ export function TraderQuiz() {
 // --- Auto-open from URL params (rendered in page.tsx) ---
 
 export function QuizAutoOpen() {
-  const [result, setResult] = useState<{ profile: TraderProfile; normalized: Scores } | null>(null);
+  const [result, setResult] = useState<{ profile: TraderProfile; normalized: Scores; name?: string; rid?: string } | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -141,7 +176,7 @@ export function QuizAutoOpen() {
 
 interface QuizModalProps {
   onClose: () => void;
-  initialResult?: { profile: TraderProfile; normalized: Scores };
+  initialResult?: { profile: TraderProfile; normalized: Scores; name?: string; rid?: string };
 }
 
 export function QuizModal({ onClose, initialResult }: QuizModalProps) {
@@ -150,6 +185,8 @@ export function QuizModal({ onClose, initialResult }: QuizModalProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const questionRef = useRef(0);
   const [scores, setScores] = useState<Scores>(INITIAL_SCORES);
+  const [userName, setUserName] = useState(initialResult?.name ?? '');
+  const ridRef = useRef(initialResult?.rid ?? '');
 
   const profile = useMemo(() => {
     if (screen === 'result' && initialResult) return initialResult.profile;
@@ -161,16 +198,24 @@ export function QuizModal({ onClose, initialResult }: QuizModalProps) {
     return normalizeScores(scores);
   }, [screen, scores, initialResult]);
 
-  // Push result into URL when quiz completes organically
+  // Push result into URL when quiz completes organically + submit data
+  const submitted = useRef(false);
   useEffect(() => {
     if (screen === 'result' && profile && !initialResult) {
+      const rid = ridRef.current || generateRid();
+      ridRef.current = rid;
       const url = new URL(window.location.href);
       url.searchParams.set('quiz', profile.key);
       url.searchParams.set('c', normalized.conviction.toString());
       url.searchParams.set('r', normalized.risk.toString());
       url.searchParams.set('d', normalized.discipline.toString());
       url.searchParams.set('i', normalized.independence.toString());
+      url.searchParams.set('rid', rid);
       window.history.replaceState({}, '', url.toString());
+      if (!submitted.current) {
+        submitQuizResult(rid, profile, normalized);
+        submitted.current = true;
+      }
     }
   }, [screen, profile, normalized, initialResult]);
 
@@ -202,6 +247,9 @@ export function QuizModal({ onClose, initialResult }: QuizModalProps) {
     questionRef.current = 0;
     setCurrentQuestion(0);
     setScores(INITIAL_SCORES);
+    setUserName('');
+    ridRef.current = '';
+    submitted.current = false;
   }, []);
 
   useEffect(() => {
@@ -235,7 +283,7 @@ export function QuizModal({ onClose, initialResult }: QuizModalProps) {
 
         {screen === 'intro' && <QuizIntro onStart={() => { setQuestions(pickQuestions()); setScreen('quiz'); }} />}
         {screen === 'quiz' && questions.length > 0 && <QuizQuestionScreen questions={questions} questionIndex={currentQuestion} onAnswer={handleAnswer} />}
-        {screen === 'result' && profile && <QuizResult profile={profile} normalized={normalized} onRetake={reset} onClose={onClose} />}
+        {screen === 'result' && profile && <QuizResult profile={profile} normalized={normalized} onRetake={reset} onClose={onClose} userName={userName} onNameChange={setUserName} rid={ridRef.current} />}
       </div>
     </div>
   );
@@ -337,11 +385,17 @@ function QuizResult({
   normalized,
   onRetake,
   onClose,
+  userName,
+  onNameChange,
+  rid,
 }: {
   profile: TraderProfile;
   normalized: Scores;
   onRetake: () => void;
   onClose: () => void;
+  userName: string;
+  onNameChange: (name: string) => void;
+  rid: string;
 }) {
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
   const [webShareSupported, setWebShareSupported] = useState(false);
@@ -350,9 +404,31 @@ function QuizResult({
     setWebShareSupported(typeof navigator.share === 'function');
   }, []);
 
-  const resultUrl = useMemo(() => buildQuizResultUrl(profile, normalized), [profile, normalized]);
+  const trimmedName = userName.trim();
+  const resultUrl = useMemo(() => buildQuizResultUrl(profile, normalized, trimmedName || undefined), [profile, normalized, trimmedName]);
 
-  const shareText = `I'm ${profile.name}! ${profile.icon}\nOnly ${profile.rarity}% of traders get this result.\nConviction: ${normalized.conviction}% | Risk: ${normalized.risk}% | Discipline: ${normalized.discipline}% | Independence: ${normalized.independence}%\n\nWhat trader are you? Take the quiz:`;
+  const shareText = trimmedName
+    ? `${trimmedName} is ${profile.name}! ${profile.icon}\nOnly ${profile.rarity}% of traders get this result.\nConviction: ${normalized.conviction}% | Risk: ${normalized.risk}% | Discipline: ${normalized.discipline}% | Independence: ${normalized.independence}%\n\nWhat trader are you? Take the quiz:`
+    : `I'm ${profile.name}! ${profile.icon}\nOnly ${profile.rarity}% of traders get this result.\nConviction: ${normalized.conviction}% | Risk: ${normalized.risk}% | Discipline: ${normalized.discipline}% | Independence: ${normalized.independence}%\n\nWhat trader are you? Take the quiz:`;
+
+  // Update URL and re-submit when name changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('quiz')) return; // only update if quiz params exist
+    if (trimmedName) {
+      url.searchParams.set('name', trimmedName);
+    } else {
+      url.searchParams.delete('name');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, [trimmedName]);
+
+  const handleNameSubmit = () => {
+    if (trimmedName && rid) {
+      submitQuizResult(rid, profile, normalized, trimmedName);
+    }
+  };
 
   const handleTwitterShare = () => {
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(resultUrl)}`;
@@ -361,6 +437,11 @@ function QuizResult({
 
   const handleWhatsAppShare = () => {
     const url = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + resultUrl)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleTelegramShare = () => {
+    const url = `https://t.me/share/url?url=${encodeURIComponent(resultUrl)}&text=${encodeURIComponent(shareText)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -443,6 +524,25 @@ function QuizResult({
         </div>
       </div>
 
+      {/* Name input */}
+      <div className="mb-5 sm:mb-6 max-w-[320px] mx-auto">
+        <p className="text-[10px] sm:text-xs text-[#5a5a5a] font-display uppercase tracking-wider mb-2">
+          Personalize your card
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={userName}
+            onChange={(e) => onNameChange(e.target.value.slice(0, 30))}
+            onBlur={handleNameSubmit}
+            onKeyDown={(e) => e.key === 'Enter' && handleNameSubmit()}
+            placeholder="Enter your name"
+            className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs sm:text-sm text-white placeholder-[#5a5a5a] outline-none focus:border-[#c4f82e]/30 transition-colors"
+            maxLength={30}
+          />
+        </div>
+      </div>
+
       {/* Social share row */}
       <p className="text-[10px] sm:text-xs text-[#5a5a5a] font-display uppercase tracking-wider mb-2">
         Challenge a Friend
@@ -452,6 +552,13 @@ function QuizResult({
         <button onClick={handleTwitterShare} className={SHARE_BTN} aria-label="Share on X" title="Share on X">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+        </button>
+
+        {/* Telegram */}
+        <button onClick={handleTelegramShare} className={`${SHARE_BTN} hover:!border-[#26A5E4]/30 hover:!text-[#26A5E4]`} aria-label="Share on Telegram" title="Share on Telegram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
           </svg>
         </button>
 
