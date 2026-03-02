@@ -1,18 +1,20 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  quizQuestions,
+  pickQuestions,
   normalizeScores,
   getProfile,
   type Scores,
+  type QuizQuestion,
   type TraderProfile,
 } from '@/data/quiz';
 
 type Screen = 'intro' | 'quiz' | 'result';
 
-const INITIAL_SCORES: Scores = { bias: 0, risk: 0, discipline: 0, emotion: 0 };
+const INITIAL_SCORES: Scores = { conviction: 0, risk: 0, discipline: 0, independence: 0 };
+const QUESTIONS_PER_QUIZ = 8;
 
 export function TraderQuiz() {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,45 +51,40 @@ export function TraderQuiz() {
 
 export function QuizModal({ onClose }: { onClose: () => void }) {
   const [screen, setScreen] = useState<Screen>('intro');
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const questionRef = useRef(0);
   const [scores, setScores] = useState<Scores>(INITIAL_SCORES);
-  const [profile, setProfile] = useState<TraderProfile | null>(null);
-  const [normalized, setNormalized] = useState<Scores>(INITIAL_SCORES);
+  const profile = useMemo(() => (screen === 'result' ? getProfile(scores) : null), [screen, scores]);
+  const normalized = useMemo(() => normalizeScores(scores), [scores]);
 
   const handleAnswer = useCallback(
     (optionScores: Scores) => {
       const q = questionRef.current;
+
       setScores((prev) => ({
-        bias: prev.bias + optionScores.bias,
+        conviction: prev.conviction + optionScores.conviction,
         risk: prev.risk + optionScores.risk,
         discipline: prev.discipline + optionScores.discipline,
-        emotion: prev.emotion + optionScores.emotion,
+        independence: prev.independence + optionScores.independence,
       }));
 
-      if (q < quizQuestions.length - 1) {
+      if (q < questions.length - 1) {
         questionRef.current = q + 1;
         setCurrentQuestion(q + 1);
       } else {
-        // Compute final scores inline since setScores is batched
-        setScores((final) => {
-          setProfile(getProfile(final));
-          setNormalized(normalizeScores(final));
-          setScreen('result');
-          return final;
-        });
+        setScreen('result');
       }
     },
-    []
+    [questions]
   );
 
   const reset = useCallback(() => {
     setScreen('intro');
+    setQuestions([]);
     questionRef.current = 0;
     setCurrentQuestion(0);
     setScores(INITIAL_SCORES);
-    setProfile(null);
-    setNormalized(INITIAL_SCORES);
   }, []);
 
   useEffect(() => {
@@ -119,8 +116,8 @@ export function QuizModal({ onClose }: { onClose: () => void }) {
           style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196,248,46,0.25) 50%, transparent 100%)' }}
         />
 
-        {screen === 'intro' && <QuizIntro onStart={() => setScreen('quiz')} />}
-        {screen === 'quiz' && <QuizQuestionScreen questionIndex={currentQuestion} onAnswer={handleAnswer} />}
+        {screen === 'intro' && <QuizIntro onStart={() => { setQuestions(pickQuestions()); setScreen('quiz'); }} />}
+        {screen === 'quiz' && questions.length > 0 && <QuizQuestionScreen questions={questions} questionIndex={currentQuestion} onAnswer={handleAnswer} />}
         {screen === 'result' && profile && <QuizResult profile={profile} normalized={normalized} onRetake={reset} onClose={onClose} />}
       </div>
     </div>
@@ -135,7 +132,7 @@ function QuizIntro({ onStart }: { onStart: () => void }) {
         Trader Profile Quiz
       </h2>
       <p className="text-[#a0a0a0] text-xs sm:text-sm mb-2 max-w-[400px] mx-auto leading-relaxed">
-        8 questions. 4 dimensions. Discover your trading personality and find out which tools match your style.
+        8 questions. Randomized every time. Discover your crypto trading personality.
       </p>
       <p className="text-[#5a5a5a] text-[10px] sm:text-xs mb-6 sm:mb-8">Takes about 1 minute</p>
       <button
@@ -145,7 +142,7 @@ function QuizIntro({ onStart }: { onStart: () => void }) {
         Start Quiz
       </button>
       <div className="mt-5 sm:mt-6 flex justify-center gap-1.5">
-        {Array.from({ length: quizQuestions.length }).map((_, i) => (
+        {Array.from({ length: QUESTIONS_PER_QUIZ }).map((_, i) => (
           <div key={i} className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white/[0.07]" />
         ))}
       </div>
@@ -154,19 +151,21 @@ function QuizIntro({ onStart }: { onStart: () => void }) {
 }
 
 function QuizQuestionScreen({
+  questions,
   questionIndex,
   onAnswer,
 }: {
+  questions: QuizQuestion[];
   questionIndex: number;
   onAnswer: (scores: Scores) => void;
 }) {
-  const q = quizQuestions[questionIndex];
+  const q = questions[questionIndex];
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <span className="text-[10px] sm:text-xs text-[#5a5a5a] font-mono">
-          {questionIndex + 1} / {quizQuestions.length}
+          {questionIndex + 1} / {questions.length}
         </span>
         <span className="text-[10px] sm:text-xs text-[#c4f82e]/50 font-display uppercase tracking-wider">
           {CATEGORY_LABELS[q.category]}
@@ -175,7 +174,7 @@ function QuizQuestionScreen({
       <div className="w-full h-0.5 sm:h-1 bg-white/[0.04] rounded-full mb-6 sm:mb-8">
         <div
           className="h-full bg-[#c4f82e] rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${((questionIndex + 1) / quizQuestions.length) * 100}%` }}
+          style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }}
         />
       </div>
 
@@ -197,17 +196,17 @@ function QuizQuestionScreen({
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  bias: 'Market Bias',
-  risk: 'Risk Tolerance',
+  conviction: 'Conviction',
+  risk: 'Risk Appetite',
   discipline: 'Discipline',
-  emotion: 'Emotional Behavior',
+  independence: 'Independence',
 };
 
 const DIMENSION_LABELS: { key: keyof Scores; label: string }[] = [
-  { key: 'bias', label: 'Market Bias' },
-  { key: 'risk', label: 'Risk Tolerance' },
+  { key: 'conviction', label: 'Conviction' },
+  { key: 'risk', label: 'Risk Appetite' },
   { key: 'discipline', label: 'Discipline' },
-  { key: 'emotion', label: 'Emotional Control' },
+  { key: 'independence', label: 'Independence' },
 ];
 
 function QuizResult({
@@ -221,16 +220,17 @@ function QuizResult({
   onRetake: () => void;
   onClose: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
+  const [shareState, setShareState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   const handleShare = async () => {
-    const text = `I'm ${profile.name}! ${profile.traits.join(' \u00B7 ')}\n\nDiscover your trading personality at hitpointterminal.com`;
+    const text = `I'm ${profile.name}! ${profile.icon}\nConviction: ${normalized.conviction}% \u00B7 Risk: ${normalized.risk}% \u00B7 Discipline: ${normalized.discipline}% \u00B7 Independence: ${normalized.independence}%\n\nWhat trader are you? Find out at hitpointterminal.com`;
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setShareState('copied');
+      setTimeout(() => setShareState('idle'), 2000);
     } catch {
-      // Clipboard not available
+      setShareState('failed');
+      setTimeout(() => setShareState('idle'), 2000);
     }
   };
 
@@ -250,7 +250,7 @@ function QuizResult({
         {profile.traits.map((trait) => (
           <span
             key={trait}
-            className="text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[#c4f82e]/8 text-[#c4f82e] border border-[#c4f82e]/15"
+            className="text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[#c4f82e]/[0.08] text-[#c4f82e] border border-[#c4f82e]/[0.15]"
           >
             {trait}
           </span>
@@ -300,7 +300,7 @@ function QuizResult({
           onClick={handleShare}
           className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-[#c4f82e] text-black font-display font-bold text-xs sm:text-sm hover:bg-[#a8e024] transition-colors"
         >
-          {copied ? 'Copied!' : 'Share Result'}
+          {shareState === 'copied' ? 'Copied!' : shareState === 'failed' ? 'Copy failed' : 'Share Result'}
         </button>
         <button
           onClick={onRetake}
