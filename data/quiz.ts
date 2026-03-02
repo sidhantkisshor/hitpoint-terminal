@@ -22,6 +22,7 @@ export interface TraderProfile {
   icon: string;
   description: string;
   traits: string[];
+  rarity: number;
   recommendedTools: { name: string; anchor: string }[];
   matcher: (scores: Scores) => number;
 }
@@ -36,6 +37,7 @@ export const traderProfiles: TraderProfile[] = [
     description:
       'You bought the dip and never looked back. When the market dumps 40%, you zoom out and add more. Paper hands fold — you frame your unrealized losses as "conviction." Your portfolio is a time capsule.',
     traits: ['Patient', 'High Conviction', 'Unshakeable'],
+    rarity: 12,
     recommendedTools: [
       { name: 'Interactive Charts', anchor: 'charts' },
       { name: 'Fear & Greed Index', anchor: 'dashboard' },
@@ -50,6 +52,7 @@ export const traderProfiles: TraderProfile[] = [
     description:
       'Someone on CT posted a ticker with a rocket emoji and you already market-bought. Due diligence? That\'s what the reply guys are for. You\'ve been rugged more times than you can count, but that one 50x made it all worth it.',
     traits: ['FOMO King', 'High Risk', 'Impulsive'],
+    rarity: 18,
     recommendedTools: [
       { name: 'BTC Price Ticker', anchor: 'dashboard' },
       { name: 'Market Heatmap', anchor: 'dashboard' },
@@ -64,6 +67,7 @@ export const traderProfiles: TraderProfile[] = [
     description:
       'You wait. And wait. And wait. Then you take one perfect trade while everyone else is overtrading into chop. Your win rate is disgusting. You have a checklist, a journal, and absolutely zero chill about your process.',
     traits: ['Precise', 'Disciplined', 'Patient'],
+    rarity: 5,
     recommendedTools: [
       { name: 'Funding Rates', anchor: 'dashboard' },
       { name: 'Long/Short Ratio', anchor: 'dashboard' },
@@ -78,6 +82,7 @@ export const traderProfiles: TraderProfile[] = [
     description:
       'You don\'t trade the chart — you trade the people trading the chart. Funding rates, open interest, whale wallets, exchange flows. You know where the smart money is going before CT does. Data is your alpha.',
     traits: ['Data-Driven', 'Analytical', 'Cautious'],
+    rarity: 8,
     recommendedTools: [
       { name: 'Funding Rates', anchor: 'dashboard' },
       { name: 'Liquidation Bubbles', anchor: 'dashboard' },
@@ -92,6 +97,7 @@ export const traderProfiles: TraderProfile[] = [
     description:
       'AI season? You\'re already in. RWA rotation? Loaded up last week. Meme coin summer? You\'re three narratives ahead. You don\'t trade charts — you trade attention. The meta is your edge, and you ride it until CT catches on.',
     traits: ['Trend-Aware', 'Social', 'Adaptive'],
+    rarity: 14,
     recommendedTools: [
       { name: 'Market Heatmap', anchor: 'dashboard' },
       { name: 'Market Dominance', anchor: 'dashboard' },
@@ -106,6 +112,7 @@ export const traderProfiles: TraderProfile[] = [
     description:
       'You opened a 50x long at the local top. Again. Your liquidation history reads like a horror novel. You know you should use stops. You know you should lower leverage. But where\'s the fun in that? Next trade is the one.',
     traits: ['Max Leverage', 'Emotional', 'Reckless'],
+    rarity: 22,
     recommendedTools: [
       { name: 'Liquidation Bubbles', anchor: 'dashboard' },
       { name: 'BTC Price Ticker', anchor: 'dashboard' },
@@ -120,6 +127,7 @@ export const traderProfiles: TraderProfile[] = [
     description:
       'Why think when someone else already did? You follow the top traders, mirror their positions, and ride their conviction. Your alpha is knowing who to follow. Sometimes you\'re early. Usually you\'re late. But you\'re never alone.',
     traits: ['Follower', 'Risk-Averse', 'Reactive'],
+    rarity: 16,
     recommendedTools: [
       { name: 'Fear & Greed Index', anchor: 'dashboard' },
       { name: 'Market Heatmap', anchor: 'dashboard' },
@@ -134,6 +142,7 @@ export const traderProfiles: TraderProfile[] = [
     description:
       'Three cycles deep. You bought BTC under $1k, survived Mt. Gox, and laughed through the 2022 crash. CT drama doesn\'t faze you. When everyone\'s euphoric, you\'re taking profits. When everyone\'s capitulating, you\'re accumulating. You\'ve seen this movie before.',
     traits: ['Experienced', 'Contrarian', 'Independent'],
+    rarity: 5,
     recommendedTools: [
       { name: 'Fear & Greed Index', anchor: 'dashboard' },
       { name: 'Interactive Charts', anchor: 'charts' },
@@ -444,4 +453,8 @@ export function getProfile(scores: Scores): TraderProfile {
   }
 
   return best;
+}
+
+export function getProfileByKey(key: string): TraderProfile | undefined {
+  return traderProfiles.find((p) => p.key === key);
 }

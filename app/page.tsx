@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { BTCPriceTicker } from '@/components/BTCPriceTicker';
 import { FearGreedIndex } from '@/components/FearGreedIndex';
 import { LiquidationBubbles } from '@/components/LiquidationBubbles';
@@ -14,8 +15,59 @@ import { PartnerLogos } from '@/components/PartnerLogos';
 import { NewsletterPopup } from '@/components/NewsletterPopup';
 import { SignalsGallery } from '@/components/SignalsGallery';
 import { NewsletterSignup } from '@/components/NewsletterSignup';
-import { TraderQuiz } from '@/components/TraderQuiz';
+import { TraderQuiz, QuizAutoOpen } from '@/components/TraderQuiz';
 import { HeaderQuizCTA } from '@/components/HeaderQuizCTA';
+import { traderProfiles } from '@/data/quiz';
+
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const quizKey = typeof params.quiz === 'string' ? params.quiz : undefined;
+
+  if (!quizKey) {
+    return {
+      title: 'Hitpoint Terminal - Live Crypto Intelligence',
+      description: 'Professional-grade real-time crypto analytics terminal',
+    };
+  }
+
+  const profile = traderProfiles.find((p) => p.key === quizKey);
+  if (!profile) {
+    return {
+      title: 'Hitpoint Terminal - Live Crypto Intelligence',
+      description: 'Professional-grade real-time crypto analytics terminal',
+    };
+  }
+
+  const c = typeof params.c === 'string' ? params.c : '50';
+  const r = typeof params.r === 'string' ? params.r : '50';
+  const d = typeof params.d === 'string' ? params.d : '50';
+  const i = typeof params.i === 'string' ? params.i : '50';
+
+  const ogImageUrl = `/api/og/quiz?profile=${quizKey}&c=${c}&r=${r}&d=${d}&i=${i}`;
+  const title = `I'm ${profile.name}! ${profile.icon} | Hitpoint Terminal`;
+  const description = `Conviction: ${c}% | Risk: ${r}% | Discipline: ${d}% | Independence: ${i}% — What trader are you?`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: `${profile.name} trader profile card` }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImageUrl],
+    },
+  };
+}
 
 export default function Home() {
   return (
@@ -122,6 +174,7 @@ export default function Home() {
         </div>
       </section>
       <NewsletterPopup />
+      <QuizAutoOpen />
     </main>
   );
 }
