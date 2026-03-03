@@ -41,12 +41,11 @@ export async function checkRateLimit(identifier: string): Promise<{
     };
   }
 
-  const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
-
-  return {
-    success,
-    limit,
-    remaining,
-    reset,
-  };
+  try {
+    const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
+    return { success, limit, remaining, reset };
+  } catch {
+    // Redis unreachable (e.g. DNS failure in dev) — allow the request
+    return { success: true, limit: 10, remaining: 10, reset: Date.now() + 10000 };
+  }
 }

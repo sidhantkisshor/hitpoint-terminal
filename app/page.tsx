@@ -46,13 +46,9 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const r = typeof params.r === 'string' ? params.r : '50';
   const d = typeof params.d === 'string' ? params.d : '50';
   const i = typeof params.i === 'string' ? params.i : '50';
-  const name = typeof params.name === 'string' ? params.name.slice(0, 30) : undefined;
 
-  const nameParam = name ? `&name=${encodeURIComponent(name)}` : '';
-  const ogImageUrl = `/api/og/quiz?profile=${quizKey}&c=${c}&r=${r}&d=${d}&i=${i}${nameParam}`;
-  const title = name
-    ? `${name} is ${profile.name}! ${profile.icon} | Hitpoint Terminal`
-    : `I'm ${profile.name}! ${profile.icon} | Hitpoint Terminal`;
+  const ogImageUrl = `/api/og/quiz?profile=${quizKey}&c=${c}&r=${r}&d=${d}&i=${i}`;
+  const title = `I'm ${profile.name}! ${profile.icon} | Hitpoint Terminal`;
   const description = `Conviction: ${c}% | Risk: ${r}% | Discipline: ${d}% | Independence: ${i}% — What trader are you?`;
 
   return {

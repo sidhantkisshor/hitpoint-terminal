@@ -5,7 +5,6 @@ import { logger } from '@/lib/logger';
 
 const QuizResultSchema = z.object({
   rid: z.string().min(1).max(64),
-  name: z.string().max(30).optional(),
   profile: z.string().min(1).max(32),
   scores: z.object({
     c: z.number().int().min(0).max(100),

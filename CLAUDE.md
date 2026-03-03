@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Hitpoint Terminal is a real-time crypto analytics dashboard (Bloomberg Terminal-style) built with Next.js 15 App Router, TypeScript, Zustand, and Tailwind CSS. It displays live market data via WebSockets and REST APIs in a glassmorphic bento-grid layout.
+Hitpoint Terminal is a real-time crypto analytics dashboard (Bloomberg Terminal-style) built with Next.js 15 App Router, TypeScript, Zustand, and Tailwind CSS. It displays live market data via WebSockets and REST APIs in a glassmorphic bento-grid layout. Deployed on Vercel.
 
 ## Commands
 
@@ -15,7 +15,7 @@ npm start        # Start production server
 npm run lint     # ESLint
 ```
 
-No test framework is configured.
+No test framework is configured. Use `npx tsc --noEmit` for type checking.
 
 ## Architecture
 
@@ -29,22 +29,38 @@ WebSocket connections (Binance, Bybit) connect directly from client components, 
 
 - **`app/`** — Next.js App Router pages and API routes
 - **`app/api/coingecko/`** — Server-side proxy routes for CoinGecko (rate-limited via Upstash Redis, with hardcoded fallback data)
-- **`app/api/newsletter/`** — Email collection endpoint (Zod-validated, rate-limited, file-based storage)
+- **`app/api/og/quiz/`** — Dynamic OG image generation for quiz results (uses `next/og` ImageResponse)
+- **`app/api/quiz/results/`** — Quiz result data collection endpoint (Zod-validated, rate-limited, logs only — storage TBD)
 - **`components/`** — All client components (`'use client'`), each self-contained with its own data fetching via `useEffect` + `setInterval`
-- **`data/`** — Static content data files (testimonials, partners, signals, quiz questions)
-- **`store/useMarketStore.ts`** — Single Zustand store with `subscribeWithSelector` middleware; holds all market state (BTC price, fear/greed, long/short, funding rates, market data, dominance)
-- **`lib/validation.ts`** — Zod schemas for every external API response + newsletter
-- **`lib/ratelimit.ts`** — Upstash Redis sliding-window rate limiter (gracefully falls back if Redis not configured)
+- **`data/`** — Static content data files (testimonials, partners, signals, quiz questions/profiles)
+- **`store/useMarketStore.ts`** — Zustand store with `subscribeWithSelector` middleware; holds all market state (BTC price, fear/greed, long/short, funding rates, market data, dominance)
+- **`store/useSimulatorStore.ts`** — Zustand store with `persist` middleware for trading simulator/challenge state (infrastructure — not yet integrated in UI)
+- **`lib/validation.ts`** — Zod schemas for every external API response
+- **`lib/ratelimit.ts`** — Upstash Redis sliding-window rate limiter (gracefully falls back if Redis not configured or unreachable)
 - **`lib/logger.ts`** — Environment-aware logger (silent in production)
+- **`lib/simulator-evaluation.ts`** — Trading simulator evaluation helpers (drawdown checks, risk validation)
 
 ### Component Pattern
 
-Every component follows the same pattern:
+Data-fetching components follow this pattern:
 1. Subscribe to specific Zustand slice: `useMarketStore((s) => s.specificField)`
 2. `useEffect` sets up polling interval or WebSocket connection
 3. Fetch → Zod validate → update store
 4. Cleanup interval/WebSocket on unmount
 5. Fallback data on API failure (never crashes)
+
+### Quiz System
+
+`TraderQuiz` (`components/TraderQuiz.tsx`) is a self-contained modal quiz with its own data layer:
+- **8 trader profiles** with matcher functions, rarity percentages, traits, and recommended tools (`data/quiz.ts`)
+- **24 questions** (6 per dimension: conviction, risk, discipline, independence); 2 random per category = 8 per quiz
+- Score normalization via `SCORE_RANGES` computed from extreme answers
+- Profile matching via `matcher` closures on raw (unnormalized) scores
+- `QuizAutoOpen` component reads URL params (`?quiz=...&c=...&r=...&d=...&i=...`) to restore shared results
+- Results are submitted fire-and-forget to `/api/quiz/results`
+- OG image generation at `/api/og/quiz` renders a shareable card (1200×630) with profile + score bars
+- `generateMetadata` in `app/page.tsx` sets dynamic OG tags when quiz params are present
+- OG route has its own static copy of profile data (avoids importing matcher closures into edge runtime)
 
 ### External Data Sources
 
@@ -65,6 +81,7 @@ Every component follows the same pattern:
 - Tailwind custom colors: `neon-green`, `accent-cyan`, `accent-purple` (defined in `tailwind.config.ts`)
 - Glassmorphism: backdrop-blur, gradient borders, neon glow hover effects on `.bento-item`
 - 12-column responsive grid with `col-span-*` breakpoints
+- Use standard Tailwind opacity syntax (`bg-white/[0.08]`) not shorthand (`bg-white/8`)
 
 ### Security Headers
 
@@ -78,15 +95,17 @@ Single scrollable page with 4 sections, navigated via sticky `SectionNav`:
 - **Community** — CommunityShowcase carousel, TwitterFeed, PartnerLogos
 - **Signals** — SignalsGallery, NewsletterSignup, TraderQuiz
 
-`NewsletterPopup` renders as a global overlay (bottom-right, 30s delay or 50% scroll).
+`HeaderQuizCTA` renders a quiz launch button in the site header. `NewsletterPopup` renders as a global overlay (bottom-right, 30s delay or 50% scroll).
 
 ## Environment Variables
 
-Only needed for production rate limiting (optional — falls back to in-memory):
+Only needed for production rate limiting (optional — falls back to allowing all requests):
 ```
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 ```
+
+`metadataBase` uses `VERCEL_PROJECT_PRODUCTION_URL` if set, otherwise defaults to `https://hitpointterminal.com`.
 
 All external APIs are public and require no auth keys.
 
@@ -96,4 +115,5 @@ All external APIs are public and require no auth keys.
 - All components are client components (`'use client'`)
 - Every API response is validated with Zod (`lib/validation.ts`) before use
 - API routes return fallback data on failure rather than error responses
-- Fonts: Inter (sans), JetBrains Mono (mono)
+- Fonts: Plus Jakarta Sans (sans), Outfit (display), JetBrains Mono (mono)
+- OG images use `next/og` (built-in), not `@vercel/og` standalone package

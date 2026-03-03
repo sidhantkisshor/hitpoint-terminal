@@ -19,6 +19,7 @@
 # misc
 .DS_Store
 *.pem
+nul
 
 # debug
 npm-debug.log*
@@ -26,6 +27,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
 
 # vercel
@@ -52,7 +54,5 @@ data/subscribers.json
 # planning docs
 docs/
 
-# misc
-nul
-
-.vercel
+# claude
+.claude/settings.local.json
